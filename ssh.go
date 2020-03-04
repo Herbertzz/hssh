@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
+	"gssh/common"
 	"io"
 	"io/ioutil"
 	"os"
@@ -33,11 +34,11 @@ type SSHConfig struct {
 
 func openSSH(c SSHConfig) {
 	if c.Host == "" {
-		checkErr(errors.New("Host 必须存在"))
+		common.CheckErr(errors.New("Host 必须存在"))
 	}
 
 	if c.PrivateKeyPath == "" && c.Password == "" {
-		checkErr(errors.New("认证方式不能为空, 支持密码(password)、密钥(key)两种方式"))
+		common.CheckErr(errors.New("认证方式不能为空, 支持密码(password)、密钥(key)两种方式"))
 	}
 
 	var (
@@ -68,7 +69,7 @@ func openSSH(c SSHConfig) {
 		auth = append(auth, ssh.Password(c.Password))
 	} else if c.PrivateKeyPath != "" {
 		pemBytes, err := ioutil.ReadFile(c.PrivateKeyPath)
-		checkErr(err)
+		common.CheckErr(err)
 
 		var signer ssh.Signer
 		if c.KeyPassphrase == "" {
@@ -76,7 +77,7 @@ func openSSH(c SSHConfig) {
 		} else {
 			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
 		}
-		checkErr(err)
+		common.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
 	}
 
@@ -113,19 +114,12 @@ func openSSH(c SSHConfig) {
 	// 创建 client
 	addr = fmt.Sprintf("%s:%d", c.Host, port)
 	client, err = ssh.Dial("tcp", addr, sshConfig)
-	checkErr(err)
+	common.CheckErr(err)
 	defer client.Close()
 
 	// 获取 session
 	err = newSession(client)
-	checkErr(err)
-}
-
-func checkErr(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	common.CheckErr(err)
 }
 
 // 解决当本地调整了终端大小后，远程终端毫无反应的问题
