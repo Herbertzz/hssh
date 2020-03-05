@@ -13,7 +13,7 @@ func main() {
 	app := &cli.App{
 		Name:    common.ProjectName,
 		Usage:   "manage ssh sessions",
-		Version: "0.0.7-beta",
+		Version: "0.0.8-beta",
 		Action: func(c *cli.Context) error {
 			if c.Args().First() != "" {
 				sessions, success := config.ReadYamlConfig()
