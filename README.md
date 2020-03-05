@@ -16,8 +16,8 @@ $ hssh add -a alias -i host [-u nameuser] [-p port] [-pass password] [--key priv
 # -i host: 服务器的 IP 地址，必要
 # [-u nameuser]: 用户名(默认值: root), 可选
 # [-p port]: 端口(默认值: 22), 可选
-# [-pass password]: 密码认证, 可选
-# [--key private-key]: 密钥认证, 可选
+# [-pass password]: 密码认证, 可选, 密码认证和密钥认证必须设置其一
+# [--key private-key]: 密钥认证, 可选, 密码认证和密钥认证必须设置其一
 # [--key-pass key-passphrase]: 密钥密码, 可选
 
 # 查看保存的服务器列表

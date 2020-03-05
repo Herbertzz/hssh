@@ -20,7 +20,7 @@ func init() {
 // 检测是否有异常，如有则直接停止应用
 func CheckErr(err error) {
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s\n", err)
 		os.Exit(1)
 	}
 }

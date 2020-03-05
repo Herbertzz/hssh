@@ -74,6 +74,8 @@ func OpenSSH(c Config) {
 		}
 		common.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
+	} else {
+		common.CheckErr(errors.New("密码认证和密钥认证必须设置其一"))
 	}
 
 	config = ssh.Config{

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/urfave/cli"
 	"hssh/common"
@@ -101,12 +102,13 @@ func main() {
 					}
 					if c.String("password") != "" {
 						session.Password = c.String("password")
-					}
-					if c.String("private-key") != "" {
+					} else if c.String("private-key") != "" {
 						session.PrivateKeyPath = common.PrivateKeyPath(c.String("private-key"))
-					}
-					if c.String("key-passphrase") != "" {
-						session.KeyPassphrase = c.String("key-passphrase")
+						if c.String("key-passphrase") != "" {
+							session.KeyPassphrase = c.String("key-passphrase")
+						}
+					} else {
+						common.CheckErr(errors.New("密码认证和密钥认证必须设置其一"))
 					}
 					sessions[alias] = session
 					config.WriteYamlConfig(sessions)
