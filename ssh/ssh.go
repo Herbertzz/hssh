@@ -1,4 +1,4 @@
-package main
+package ssh
 
 import (
 	"errors"
@@ -23,22 +23,17 @@ type SSHTerminal struct {
 }
 
 type SSHConfig struct {
-	User           string
-	Password       string
-	PrivateKeyPath string
-	KeyPassphrase  string
-	Host           string
-	Port           int
-	CipherList     []string
+	User           string `yaml:"username"`
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	Password       string `yaml:"password"`
+	PrivateKeyPath string `yaml:"private_key"`
+	KeyPassphrase  string `yaml:"key_passphrase"`
 }
 
-func openSSH(c SSHConfig) {
+func OpenSSH(c SSHConfig) {
 	if c.Host == "" {
 		common.CheckErr(errors.New("Host 必须存在"))
-	}
-
-	if c.PrivateKeyPath == "" && c.Password == "" {
-		common.CheckErr(errors.New("认证方式不能为空, 支持密码(password)、密钥(key)两种方式"))
 	}
 
 	var (
@@ -81,25 +76,19 @@ func openSSH(c SSHConfig) {
 		auth = append(auth, ssh.PublicKeys(signer))
 	}
 
-	if len(c.CipherList) == 0 {
-		config = ssh.Config{
-			Ciphers: []string{
-				"aes128-ctr",
-				"aes192-ctr",
-				"aes256-ctr",
-				"aes128-gcm@openssh.com",
-				"arcfour256",
-				"arcfour128",
-				"aes128-cbc",
-				"3des-cbc",
-				"aes192-cbc",
-				"aes256-cbc",
-			},
-		}
-	} else {
-		config = ssh.Config{
-			Ciphers: c.CipherList,
-		}
+	config = ssh.Config{
+		Ciphers: []string{
+			"aes128-ctr",
+			"aes192-ctr",
+			"aes256-ctr",
+			"aes128-gcm@openssh.com",
+			"arcfour256",
+			"arcfour128",
+			"aes128-cbc",
+			"3des-cbc",
+			"aes192-cbc",
+			"aes256-cbc",
+		},
 	}
 
 	// 创建 ssh 配置
