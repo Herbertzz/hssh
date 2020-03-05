@@ -11,10 +11,10 @@ import (
 
 // 读取配置文件
 func ReadYamlConfig() (map[string]ssh.Config, bool) {
-	if !common.CheckFileISExist(common.ConfigPath) {
+	if !common.CheckFileISExist(YamlPath) {
 		return make(map[string]ssh.Config), false
 	}
-	yaml, err := ioutil.ReadFile(common.ConfigPath)
+	yaml, err := ioutil.ReadFile(YamlPath)
 	common.CheckErr(err)
 	configs := make(map[string]ssh.Config)
 	err = yaml2.Unmarshal(yaml, &configs)
@@ -27,7 +27,7 @@ func WriteYamlConfig(sessions map[string]ssh.Config) {
 	d, err := yaml2.Marshal(sessions)
 	common.CheckErr(err)
 
-	file, err := os.OpenFile(common.ConfigPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	file, err := os.OpenFile(YamlPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	common.CheckErr(err)
 	defer file.Close()
 
@@ -37,10 +37,10 @@ func WriteYamlConfig(sessions map[string]ssh.Config) {
 
 // 删除配置文件
 func DelYamlFile() bool {
-	if !common.CheckFileISExist(common.ConfigPath) {
+	if !common.CheckFileISExist(YamlPath) {
 		return true
 	}
-	err := os.Remove(common.ConfigPath)
+	err := os.Remove(YamlPath)
 	common.CheckErr(err)
 	return true
 }

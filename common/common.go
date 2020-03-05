@@ -7,16 +7,6 @@ import (
 	path2 "path"
 )
 
-var ConfigPath string
-var ProjectName string
-
-func init() {
-	if ConfigPath == "" {
-		ConfigPath = path2.Join(HomePath(), ".hssh.yaml")
-	}
-	ProjectName = "hssh"
-}
-
 // 检测是否有异常，如有则直接停止应用
 func CheckErr(err error) {
 	if err != nil {

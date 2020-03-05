@@ -12,14 +12,14 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name:    common.ProjectName,
+		Name:    config.ProjectName,
 		Usage:   "manage ssh sessions",
-		Version: "0.0.8-beta",
+		Version: config.Version,
 		Action: func(c *cli.Context) error {
 			if c.Args().First() != "" {
 				sessions, success := config.ReadYamlConfig()
 				if !success {
-					fmt.Printf("please execute command `%s h` for help\n", common.ProjectName)
+					fmt.Printf("please execute command `%s h` for help\n", config.ProjectName)
 					os.Exit(0)
 				}
 				session, ok := sessions[c.Args().First()]
@@ -31,7 +31,7 @@ func main() {
 				ssh.OpenSSH(session)
 				return nil
 			}
-			fmt.Printf("please execute command `%s h` for help\n", common.ProjectName)
+			fmt.Printf("please execute command `%s h` for help\n", config.ProjectName)
 			return nil
 		},
 		Commands: []*cli.Command{
@@ -132,7 +132,7 @@ func main() {
 					if arg := c.Args().First(); arg != "" {
 						sessions, success := config.ReadYamlConfig()
 						if !success {
-							fmt.Printf("list is empty, please execute command `%s add` first\n", common.ProjectName)
+							fmt.Printf("list is empty, please execute command `%s add` first\n", config.ProjectName)
 							os.Exit(0)
 						}
 						_, ok := sessions[arg]
@@ -155,7 +155,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					sessions, success := config.ReadYamlConfig()
 					if !success {
-						fmt.Printf("list is empty, please execute command `%s add` first\n", common.ProjectName)
+						fmt.Printf("list is empty, please execute command `%s add` first\n", config.ProjectName)
 						os.Exit(0)
 					}
 
