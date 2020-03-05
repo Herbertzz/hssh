@@ -87,7 +87,7 @@ func main() {
 						os.Exit(0)
 					}
 
-					session := ssh.SSHConfig{}
+					session := ssh.Config{}
 					session.Host = c.String("ip")
 					if c.String("username") != "" {
 						session.User = c.String("username")

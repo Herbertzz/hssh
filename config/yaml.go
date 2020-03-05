@@ -10,20 +10,20 @@ import (
 )
 
 // 读取配置文件
-func ReadYamlConfig() (map[string]ssh.SSHConfig, bool) {
+func ReadYamlConfig() (map[string]ssh.Config, bool) {
 	if !common.CheckFileISExist(common.ConfigPath) {
-		return make(map[string]ssh.SSHConfig), false
+		return make(map[string]ssh.Config), false
 	}
 	yaml, err := ioutil.ReadFile(common.ConfigPath)
 	common.CheckErr(err)
-	configs := make(map[string]ssh.SSHConfig)
+	configs := make(map[string]ssh.Config)
 	err = yaml2.Unmarshal(yaml, &configs)
 	common.CheckErr(err)
 	return configs, true
 }
 
 // 将sessions写入配置文件中
-func WriteYamlConfig(sessions map[string]ssh.SSHConfig) {
+func WriteYamlConfig(sessions map[string]ssh.Config) {
 	d, err := yaml2.Marshal(sessions)
 	common.CheckErr(err)
 
