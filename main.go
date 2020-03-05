@@ -3,35 +3,22 @@ package main
 import (
 	"fmt"
 	"github.com/urfave/cli"
-	"gssh/common"
-	"gssh/config"
-	"gssh/ssh"
+	"hssh/common"
+	"hssh/config"
+	"hssh/ssh"
 	"os"
 )
 
 func main() {
-	/*
-		config := SSHConfig{
-			User:          "herbertzz",
-			// Password:      "henyi",
-			PrivateKeyPath:	"/Users/herbertzz/.ssh/id_rsa",
-			Host:          "149.129.103.98",
-			// Port:          22,
-		}
-		openSSH(config)
-	*/
-	/*
-
-	 */
 	app := &cli.App{
-		Name:    "hssh",
+		Name:    common.ProjectName,
 		Usage:   "manage ssh sessions",
-		Version: "0.0.1-beta",
+		Version: "0.0.7-beta",
 		Action: func(c *cli.Context) error {
 			if c.Args().First() != "" {
 				sessions, success := config.ReadYamlConfig()
 				if !success {
-					fmt.Println("列表为空, 执行 `gssh h` 查看帮助手册")
+					fmt.Printf("please execute command `%s h` for help\n", common.ProjectName)
 					os.Exit(0)
 				}
 				session, ok := sessions[c.Args().First()]
@@ -43,7 +30,7 @@ func main() {
 				ssh.OpenSSH(session)
 				return nil
 			}
-			fmt.Println("please execute command `sshs h` for help")
+			fmt.Printf("please execute command `%s h` for help\n", common.ProjectName)
 			return nil
 		},
 		Commands: []*cli.Command{
@@ -143,7 +130,7 @@ func main() {
 					if arg := c.Args().First(); arg != "" {
 						sessions, success := config.ReadYamlConfig()
 						if !success {
-							fmt.Println("list is empty, please execute command `sshs add` first")
+							fmt.Printf("list is empty, please execute command `%s add` first\n", common.ProjectName)
 							os.Exit(0)
 						}
 						_, ok := sessions[arg]
@@ -166,7 +153,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					sessions, success := config.ReadYamlConfig()
 					if !success {
-						fmt.Println("list is empty, please execute command `gssh add` first")
+						fmt.Printf("list is empty, please execute command `%s add` first\n", common.ProjectName)
 						os.Exit(0)
 					}
 

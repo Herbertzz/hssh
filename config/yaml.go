@@ -2,8 +2,8 @@ package config
 
 import (
 	yaml2 "gopkg.in/yaml.v2"
-	"gssh/common"
-	"gssh/ssh"
+	"hssh/common"
+	"hssh/ssh"
 	"io"
 	"io/ioutil"
 	"os"

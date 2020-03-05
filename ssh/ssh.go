@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
-	"gssh/common"
+	"hssh/common"
 	"io"
 	"io/ioutil"
 	"os"
