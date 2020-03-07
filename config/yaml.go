@@ -3,28 +3,30 @@ package config
 import (
 	yaml2 "gopkg.in/yaml.v2"
 	"hssh/common"
-	"hssh/ssh"
 	"io"
 	"io/ioutil"
 	"os"
 )
 
 // 读取配置文件
-func ReadYamlConfig() (map[string]ssh.Config, bool) {
+func ReadYamlConfig() (Config, bool) {
 	if !common.CheckFileISExist(YamlPath) {
-		return make(map[string]ssh.Config), false
+		return Config{}, false
 	}
 	yaml, err := ioutil.ReadFile(YamlPath)
 	common.CheckErr(err)
-	configs := make(map[string]ssh.Config)
+	configs := Config{}
 	err = yaml2.Unmarshal(yaml, &configs)
 	common.CheckErr(err)
 	return configs, true
 }
 
 // 将sessions写入配置文件中
-func WriteYamlConfig(sessions map[string]ssh.Config) {
-	d, err := yaml2.Marshal(sessions)
+func WriteYamlConfig(sessions map[string]Server) {
+	configs, _ := ReadYamlConfig()
+	configs.Servers = sessions
+
+	d, err := yaml2.Marshal(configs)
 	common.CheckErr(err)
 
 	file, err := os.OpenFile(YamlPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)

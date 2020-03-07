@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"hssh/common"
+	"hssh/config"
 	"io"
 	"io/ioutil"
 	"os"
@@ -22,16 +23,7 @@ type Terminal struct {
 	stderr  io.Reader
 }
 
-type Config struct {
-	User           string `yaml:"username"`
-	Host           string `yaml:"host"`
-	Port           int    `yaml:"port"`
-	Password       string `yaml:"password"`
-	PrivateKeyPath string `yaml:"private_key"`
-	KeyPassphrase  string `yaml:"key_passphrase"`
-}
-
-func OpenSSH(c Config) {
+func OpenSSH(c config.Server) {
 	if c.Host == "" {
 		common.CheckErr(errors.New("Host 必须存在"))
 	}
@@ -41,7 +33,7 @@ func OpenSSH(c Config) {
 		port      int
 		addr      string
 		auth      []ssh.AuthMethod
-		config    ssh.Config
+		conf    ssh.Config
 		sshConfig *ssh.ClientConfig
 		client    *ssh.Client
 		err       error
@@ -78,7 +70,7 @@ func OpenSSH(c Config) {
 		common.CheckErr(errors.New("密码认证和密钥认证必须设置其一"))
 	}
 
-	config = ssh.Config{
+	conf = ssh.Config{
 		Ciphers: []string{
 			"aes128-ctr",
 			"aes192-ctr",
@@ -97,7 +89,7 @@ func OpenSSH(c Config) {
 	sshConfig = &ssh.ClientConfig{
 		User:            user,
 		Auth:            auth,
-		Config:          config,
+		Config:          conf,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         30 * time.Second,
 	}

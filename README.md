@@ -37,13 +37,15 @@ $ hssh edit -d alias [-i host] [-u nameuser] [-p port] [-pass password] [--key p
 ## 配置文件位置及格式
 配置文件路径: `~/.hssh.yaml`, 存储格式:
 ```yaml
-alias:
-  username: root
-  host: 192.168.1.3
-  port: 22
-  password: ""
-  private_key: /Users/test/.ssh/id_rsa
-  key_passphrase: ""
+servers:
+  alias:
+    username: root
+    host: 192.168.1.3
+    port: 22
+    password: ""
+    private_key: /Users/herbertzz/.ssh/id_rsa
+    key_passphrase: ""
+
 ```
 
 ## 待开发

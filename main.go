@@ -17,7 +17,8 @@ func main() {
 		Version: config.Version,
 		Action: func(c *cli.Context) error {
 			if c.Args().First() != "" {
-				sessions, success := config.ReadYamlConfig()
+				configs, success := config.ReadYamlConfig()
+				sessions := configs.Servers
 				if !success {
 					fmt.Printf("please execute command `%s h` for help\n", config.ProjectName)
 					os.Exit(0)
@@ -81,14 +82,18 @@ func main() {
 				},
 				Action: func(c *cli.Context) error {
 					alias := c.String("alias")
-					sessions, _ := config.ReadYamlConfig()
+					configs, _ := config.ReadYamlConfig()
+					sessions := configs.Servers
+					if len(sessions) == 0 {
+						sessions = make(map[string]config.Server)
+					}
 					_, ok := sessions[alias]
 					if ok {
 						fmt.Printf("%s is already in the list\n", alias)
 						os.Exit(0)
 					}
 
-					session := ssh.Config{}
+					session := config.Server{}
 					session.Host = c.String("host")
 					if c.String("username") != "" {
 						session.User = c.String("username")
@@ -121,16 +126,18 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:     "all",
-						Usage:    "delete all",
+						Usage:    "delete all session",
 					},
 				},
 				Action: func(c *cli.Context) error {
 					if c.Bool("all") {
-						config.DelYamlFile()
+						sessions := make(map[string]config.Server, 0)
+						config.WriteYamlConfig(sessions)
 						return nil
 					}
 					if arg := c.Args().First(); arg != "" {
-						sessions, success := config.ReadYamlConfig()
+						configs, success := config.ReadYamlConfig()
+						sessions := configs.Servers
 						if !success {
 							fmt.Printf("list is empty, please execute command `%s add` first\n", config.ProjectName)
 							os.Exit(0)
@@ -153,7 +160,8 @@ func main() {
 				Name: "ls",
 				Usage: "show session list",
 				Action: func(c *cli.Context) error {
-					sessions, success := config.ReadYamlConfig()
+					configs, success := config.ReadYamlConfig()
+					sessions := configs.Servers
 					if !success {
 						fmt.Printf("list is empty, please execute command `%s add` first\n", config.ProjectName)
 						os.Exit(0)
@@ -218,7 +226,8 @@ func main() {
 				},
 				Action: func(c *cli.Context) error {
 					dst := c.String("dst")
-					sessions, _ := config.ReadYamlConfig()
+					configs, _ := config.ReadYamlConfig()
+					sessions := configs.Servers
 					_, ok := sessions[dst]
 					if !ok {
 						fmt.Printf("%s is not exist in the list\n", dst)
