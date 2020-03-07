@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/urfave/cli"
 	"hssh/common"
@@ -33,23 +32,27 @@ func app()  {
 					os.Exit(0)
 				}
 
-				ssh.OpenSSH(session)
+				key := ""
+				if session.AuthMethod == "key" {
+					key, ok = configs.Keys[session.PrivateKey]
+					if !ok {
+						fmt.Printf("%s not exist in keys\n", session.PrivateKey)
+						os.Exit(0)
+					}
+				}
+
+				ssh.OpenSSH(session, key)
 				return nil
 			}
 			fmt.Printf("please execute command `%s h` for help\n", config.ProjectName)
 			return nil
 		},
 		Commands: []*cli.Command{
+			// 添加
 			{
 				Name:  "add",
 				Usage: "add a ssh session to the list",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "alias",
-						Aliases:  []string{"a"},
-						Usage:    "ssh config alias",
-						Required: true,
-					},
 					&cli.StringFlag{
 						Name:     "host",
 						Aliases:  []string{"i"},
@@ -69,6 +72,12 @@ func app()  {
 						DefaultText: "22",
 					},
 					&cli.StringFlag{
+						Name:    "auth",
+						Usage:   "auth `method`: password or key",
+						DefaultText: "password",
+						Value: "password",
+					},
+					&cli.StringFlag{
 						Name:    "password",
 						Aliases: []string{"pass"},
 						Usage:   "password auth",
@@ -76,7 +85,7 @@ func app()  {
 					&cli.StringFlag{
 						Name:    "private-key",
 						Aliases: []string{"key"},
-						Usage:   "sshkey auth: Non-absolute path, will join home path + private key `path`",
+						Usage:   "The value of the Keys list",
 					},
 					&cli.StringFlag{
 						Name:    "key-passphrase",
@@ -85,45 +94,69 @@ func app()  {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					alias := c.String("alias")
-					configs, _ := config.ReadYamlConfig()
-					sessions := configs.Servers
-					if len(sessions) == 0 {
-						sessions = make(map[string]config.Server)
-					}
-					_, ok := sessions[alias]
-					if ok {
-						fmt.Printf("%s is already in the list\n", alias)
-						os.Exit(0)
-					}
-
-					session := config.Server{}
-					session.Host = c.String("host")
-					if c.String("username") != "" {
-						session.User = c.String("username")
-					} else {
-						session.User = "root"
-					}
-					if c.Int("port") != 0 {
-						session.Port = c.Int("port")
-					} else {
-						session.Port = 22
-					}
-					if c.String("password") != "" {
-						session.Password = c.String("password")
-					} else if c.String("private-key") != "" {
-						session.PrivateKeyPath = common.PrivateKeyPath(c.String("private-key"))
-						if c.String("key-passphrase") != "" {
-							session.KeyPassphrase = c.String("key-passphrase")
+					if arg := c.Args().First(); arg != "" {
+						configs, _ := config.ReadYamlConfig()
+						sessions := configs.Servers
+						if len(sessions) == 0 {
+							sessions = make(map[string]config.Server)
 						}
-					} else {
-						common.CheckErr(errors.New("密码认证和密钥认证必须设置其一"))
+						_, ok := sessions[arg]
+						if ok {
+							fmt.Printf("%s is already in the list\n", arg)
+							os.Exit(0)
+						}
+
+						session := config.Server{}
+						session.Host = c.String("host")
+						if c.String("username") != "" {
+							session.User = c.String("username")
+						} else {
+							session.User = "root"
+						}
+						if c.Int("port") != 0 {
+							session.Port = c.Int("port")
+						} else {
+							session.Port = 22
+						}
+						// 认证方式
+						authMethod := c.String("auth")
+						if authMethod == "password" {
+							if c.String("password") == "" {
+								fmt.Println("Error: auth method is password, cannot be empty, Try adding '--pass'")
+								return nil
+							}
+							session.Password = c.String("password")
+						} else if authMethod == "key" {
+							if c.String("private-key") == "" {
+								session.PrivateKey = "default"
+							} else {
+								key := c.String("private-key")
+								_, ok = configs.Keys[key]
+								if !ok {
+									fmt.Printf("%s does not exist in keys\n", key)
+									return nil
+								}
+								session.PrivateKey = key
+							}
+							// 密钥密码
+							if c.String("key-passphrase") != "" {
+								session.KeyPassphrase = c.String("key-passphrase")
+							}
+						} else {
+							fmt.Println("'--auth' only supports password and key")
+							return nil
+						}
+						session.AuthMethod = authMethod
+
+						sessions[arg] = session
+						config.WriteYamlConfig(sessions)
+						return nil
 					}
-					sessions[alias] = session
-					config.WriteYamlConfig(sessions)
+					fmt.Println("alias is not set")
 					return nil
 				},
 			},
+			// 删除
 			{
 				Name:  "rm",
 				Usage: "remove a ssh session to the list",
@@ -160,6 +193,7 @@ func app()  {
 					return nil
 				},
 			},
+			// 查看
 			{
 				Name: "ls",
 				Usage: "show session list",
@@ -171,30 +205,27 @@ func app()  {
 						os.Exit(0)
 					}
 
-					var password string
+					var authMethod string
+					index := 1
 					for k, v := range sessions {
-						if v.Password != "" {
-							password = "password: " + v.Password
-						} else if v.PrivateKeyPath != "" {
-							password = "private key path: " + v.PrivateKeyPath
+						if v.AuthMethod == "password" {
+							authMethod = "Password: " + v.Password
+						} else if v.AuthMethod == "key" {
+							authMethod = "Key: " + v.PrivateKey
 						} else {
-							password = "auth none"
+							authMethod = "undefined"
 						}
-						fmt.Printf("%s: %s@%s:%d(%s)\n", k, v.User, v.Host, v.Port, password)
+						fmt.Printf("%02d. %s: %s@%s:%d(%s)\n", index, k, v.User, v.Host, v.Port, authMethod)
+						index++
 					}
 					return nil
 				},
 			},
+			// 编辑
 			{
 				Name:  "edit",
 				Usage: "modify a ssh session to the list",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "dst",
-						Aliases:  []string{"d"},
-						Usage:    "`alias` to be modified",
-						Required: true,
-					},
 					&cli.StringFlag{
 						Name:     "host",
 						Aliases:  []string{"i"},
@@ -213,6 +244,11 @@ func app()  {
 						DefaultText: "22",
 					},
 					&cli.StringFlag{
+						Name:    "auth",
+						Usage:   "auth `method`: password or key",
+						DefaultText: "password",
+					},
+					&cli.StringFlag{
 						Name:    "password",
 						Aliases: []string{"pass"},
 						Usage:   "password auth",
@@ -220,7 +256,7 @@ func app()  {
 					&cli.StringFlag{
 						Name:    "private-key",
 						Aliases: []string{"key"},
-						Usage:   "sshkey auth: Non-absolute path, will join home path + private key `path`",
+						Usage:   "The value of the Keys list",
 					},
 					&cli.StringFlag{
 						Name:    "key-passphrase",
@@ -229,39 +265,66 @@ func app()  {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					dst := c.String("dst")
-					configs, _ := config.ReadYamlConfig()
-					sessions := configs.Servers
-					_, ok := sessions[dst]
-					if !ok {
-						fmt.Printf("%s is not exist in the list\n", dst)
-						os.Exit(0)
-					}
+					if arg := c.Args().First(); arg != "" {
+						configs, _ := config.ReadYamlConfig()
+						sessions := configs.Servers
+						_, ok := sessions[arg]
+						if !ok {
+							fmt.Printf("%s is not exist in the list\n", arg)
+							os.Exit(0)
+						}
 
-					session := sessions[dst]
-					if c.String("host") != "" {
-						session.Host = c.String("host")
+						session := sessions[arg]
+						if c.String("host") != "" {
+							session.Host = c.String("host")
+						}
+						if c.String("username") != "" {
+							session.User = c.String("username")
+						}
+						if c.Int("port") != 0 {
+							session.Port = c.Int("port")
+						}
+						// 认证方式
+						authMethod := c.String("auth")
+						if authMethod == "password" {
+							if c.String("password") == "" {
+								fmt.Println("Error: auth method is password, cannot be empty, Try adding '--pass'")
+								return nil
+							}
+							session.Password = c.String("password")
+							session.AuthMethod = authMethod
+							// 清除key认证的值
+							session.PrivateKey = ""
+							session.KeyPassphrase = ""
+						} else if authMethod == "key" {
+							if c.String("private-key") == "" {
+								session.PrivateKey = "default"
+							} else {
+								key := c.String("private-key")
+								_, ok = configs.Keys[key]
+								if !ok {
+									fmt.Printf("%s does not exist in keys\n", key)
+									return nil
+								}
+								session.PrivateKey = key
+							}
+							// 密钥密码
+							if c.String("key-passphrase") != "" {
+								session.KeyPassphrase = c.String("key-passphrase")
+							}
+							session.AuthMethod = authMethod
+							session.Password = ""
+						}
+
+						sessions[arg] = session
+						config.WriteYamlConfig(sessions)
+						return nil
 					}
-					if c.String("username") != "" {
-						session.User = c.String("username")
-					}
-					if c.Int("port") != 0 {
-						session.Port = c.Int("port")
-					}
-					if c.String("password") != "" {
-						session.Password = c.String("password")
-					}
-					if c.String("private-key") != "" {
-						session.PrivateKeyPath = common.PrivateKeyPath(c.String("private-key"))
-					}
-					if c.String("key-passphrase") != "" {
-						session.KeyPassphrase = c.String("key-passphrase")
-					}
-					sessions[dst] = session
-					config.WriteYamlConfig(sessions)
+					fmt.Println("alias is not set")
 					return nil
 				},
 			},
+			// 卸载
 			{
 				Name: "uninstall",
 				Usage: "unistall the app",

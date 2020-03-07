@@ -23,7 +23,7 @@ type Terminal struct {
 	stderr  io.Reader
 }
 
-func OpenSSH(c config.Server) {
+func OpenSSH(c config.Server, key string) {
 	if c.Host == "" {
 		common.CheckErr(errors.New("Host 必须存在"))
 	}
@@ -52,10 +52,10 @@ func OpenSSH(c config.Server) {
 	}
 
 	auth = make([]ssh.AuthMethod, 0)
-	if c.Password != "" {
+	if c.AuthMethod == "password" {
 		auth = append(auth, ssh.Password(c.Password))
-	} else if c.PrivateKeyPath != "" {
-		pemBytes, err := ioutil.ReadFile(c.PrivateKeyPath)
+	} else if c.AuthMethod == "key" {
+		pemBytes, err := ioutil.ReadFile(key)
 		common.CheckErr(err)
 
 		var signer ssh.Signer
@@ -67,7 +67,7 @@ func OpenSSH(c config.Server) {
 		common.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
 	} else {
-		common.CheckErr(errors.New("密码认证和密钥认证必须设置其一"))
+		common.CheckErr(errors.New("auth method only supports password and key"))
 	}
 
 	conf = ssh.Config{

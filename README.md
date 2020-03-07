@@ -11,14 +11,15 @@ $ hssh h
 $ hssh [alias]
 
 # 添加一个服务器信息
-$ hssh add -a alias -i host [-u nameuser] [-p port] [-pass password] [--key private-key] [--key-pass key-passphrase]
-# -a alias: 保存的别名，必要
+$ hssh add -i host [-u nameuser] [-p port] [--auth method] [-pass password] [--key private-key] [--key-pass key-passphrase] alias
 # -i host: 服务器的 IP 地址，必要
 # [-u nameuser]: 用户名(默认值: root), 可选
 # [-p port]: 端口(默认值: 22), 可选
-# [-pass password]: 密码认证, 可选, 密码认证和密钥认证必须设置其一
-# [--key private-key]: 密钥认证, 可选, 密码认证和密钥认证必须设置其一
+# [--auth method]: 认证方式(默认值: password), 可选, 只支持 password 和 key
+# [-pass password]: 密码认证, --auth 为 password 时, 必须存在
+# [--key private-key]: 密钥认证(默认值: default), 可选, 对应配置文件 keys 字段
 # [--key-pass key-passphrase]: 密钥密码, 可选
+# alias: 保存的别名，必要
 
 # 查看保存的服务器列表
 $ hssh ls
@@ -29,9 +30,8 @@ $ hssh rm [alias]
 # hssh rm --all
 
 # 修改指定 alias 的服务器信息
-$ hssh edit -d alias [-i host] [-u nameuser] [-p port] [-pass password] [--key private-key] [--key-pass key-passphrase] [-h]
-# -d alias: 要修改的别名
-# 其他同 hssh add 的参数
+$ hssh edit [-i host] [-u nameuser] [-p port] [--auth method] [-pass password] [--key private-key] [--key-pass key-passphrase] alias
+# 同 hssh add 的参数
 
 # 卸载
 $ hssh uninstall [--all]
@@ -41,6 +41,8 @@ $ hssh uninstall [--all]
 ## 配置文件位置及格式
 配置文件路径: `~/.hssh.yaml`, 存储格式:
 ```yaml
+keys:
+  default: /Users/herbertzz/.ssh/id_rsa  # 程序自动生成, 默认为 {当前用户主目录路径}/.ssh/id_rsa
 servers:
   alias:
     username: root
@@ -54,3 +56,4 @@ servers:
 
 ## 待开发
 * `hssh ls` 支持模糊匹配功能
+* `hssh rm {index}` 支持使用序号删除
