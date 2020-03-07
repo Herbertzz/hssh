@@ -1,7 +1,6 @@
 package config
 
 import (
-	"hssh/common"
 	path2 "path"
 )
 
@@ -27,7 +26,7 @@ type Config struct {
 
 func init() {
 	ProjectName = "hssh"
-	Version = "0.2.13-beta"
-	YamlPath = path2.Join(common.HomePath(), ".hssh.yaml")
-	DefaultPrivateKey = path2.Join(common.HomePath(), ".ssh/id_rsa")
+	Version = "0.3.13-beta"
+	YamlPath = path2.Join(HomePath(), ".hssh.yaml")
+	DefaultPrivateKey = path2.Join(HomePath(), ".ssh/id_rsa")
 }

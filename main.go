@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/urfave/cli"
-	"hssh/common"
 	"hssh/config"
 	"hssh/ssh"
 	"os"
@@ -13,7 +12,7 @@ func main() {
 	app()
 }
 
-func app()  {
+func app() {
 	app := &cli.App{
 		Name:    config.ProjectName,
 		Usage:   "manage ssh sessions",
@@ -72,10 +71,10 @@ func app()  {
 						DefaultText: "22",
 					},
 					&cli.StringFlag{
-						Name:    "auth",
-						Usage:   "auth `method`: password or key",
+						Name:        "auth",
+						Usage:       "auth `method`: password or key",
 						DefaultText: "password",
-						Value: "password",
+						Value:       "password",
 					},
 					&cli.StringFlag{
 						Name:    "password",
@@ -162,8 +161,8 @@ func app()  {
 				Usage: "remove a ssh session to the list",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:     "all",
-						Usage:    "delete all session",
+						Name:  "all",
+						Usage: "delete all session",
 					},
 				},
 				Action: func(c *cli.Context) error {
@@ -195,7 +194,7 @@ func app()  {
 			},
 			// 查看
 			{
-				Name: "ls",
+				Name:  "ls",
 				Usage: "show session list",
 				Action: func(c *cli.Context) error {
 					configs, success := config.ReadYamlConfig()
@@ -227,9 +226,9 @@ func app()  {
 				Usage: "modify a ssh session to the list",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "host",
-						Aliases:  []string{"i"},
-						Usage:    "ip address or host",
+						Name:    "host",
+						Aliases: []string{"i"},
+						Usage:   "ip address or host",
 					},
 					&cli.StringFlag{
 						Name:        "username",
@@ -244,8 +243,8 @@ func app()  {
 						DefaultText: "22",
 					},
 					&cli.StringFlag{
-						Name:    "auth",
-						Usage:   "auth `method`: password or key",
+						Name:        "auth",
+						Usage:       "auth `method`: password or key",
 						DefaultText: "password",
 					},
 					&cli.StringFlag{
@@ -326,25 +325,148 @@ func app()  {
 			},
 			// 卸载
 			{
-				Name: "uninstall",
+				Name:  "uninstall",
 				Usage: "unistall the app",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:     "all",
-						Usage:    "Delete with the configuration file",
+						Name:  "all",
+						Usage: "Delete with the configuration file",
 					},
 				},
 				Action: func(c *cli.Context) error {
 					if c.Bool("all") {
 						config.DelYamlFile()
 					}
-					common.DelCurrentApp()
+					config.DelCurrentApp()
 					return nil
+				},
+			},
+			// keys 管理
+			{
+				Name:  "keys",
+				Usage: "private keys manager",
+				Action: func(c *cli.Context) error {
+					configs, success := config.ReadYamlConfig()
+					if !success {
+						fmt.Println("not found profile")
+						os.Exit(0)
+					}
+
+					// 显示key详情
+					if arg := c.Args().First(); arg != "" {
+						v, ok := configs.Keys[arg]
+						if !ok {
+							fmt.Printf("%s not found\n", arg)
+							os.Exit(0)
+						}
+						fmt.Printf("%s: %s", arg, v)
+						return nil
+					}
+
+					// 显示keys列表
+					config.ShowKeys(configs)
+					return nil
+				},
+				Subcommands: []*cli.Command{
+					// 添加
+					{
+						Name:  "add",
+						Usage: "add a key to the keys",
+						Action: func(c *cli.Context) error {
+							key := c.Args().Get(0)
+							value := c.Args().Get(1)
+							if key == "" {
+								fmt.Printf("key is empty\n")
+								os.Exit(0)
+							}
+							if value == "" {
+								fmt.Printf("private key path is empty\n")
+								os.Exit(0)
+							}
+
+							configs, success := config.ReadYamlConfig()
+							if !success {
+								fmt.Println("not found profile")
+								os.Exit(0)
+							}
+							_, ok := configs.Keys[key]
+							if ok {
+								fmt.Printf("%s is already in key\n", key)
+								fmt.Printf("Modify the key if necessary, Please execute: %s keys edit %s %s\n", config.ProjectName, key, value)
+								os.Exit(0)
+							}
+							configs.Keys[key] = config.PrivateKeyPath(value)
+							config.WriteProfile(configs)
+							// 显示keys列表
+							config.ShowKeys(configs)
+							return nil
+						},
+					},
+					// 删除
+					{
+						Name:  "rm",
+						Usage: "remove a key to the keys",
+						Action: func(c *cli.Context) error {
+							if arg := c.Args().First(); arg != "" {
+								configs, success := config.ReadYamlConfig()
+								if !success {
+									fmt.Println("not found profile")
+									os.Exit(0)
+								}
+
+								_, ok := configs.Keys[arg]
+								if !ok {
+									fmt.Printf("%s not found\n", arg)
+									os.Exit(0)
+								}
+								delete(configs.Keys, arg)
+								config.WriteProfile(configs)
+								config.ShowKeys(configs)
+								return nil
+							}
+							fmt.Println("key not set")
+							return nil
+						},
+					},
+					// 编辑
+					{
+						Name:  "edit",
+						Usage: "modify a key to the keys",
+						Action: func(c *cli.Context) error {
+							key := c.Args().Get(0)
+							value := c.Args().Get(1)
+							if key == "" {
+								fmt.Printf("key is empty\n")
+								os.Exit(0)
+							}
+							if value == "" {
+								fmt.Printf("private key path is empty\n")
+								os.Exit(0)
+							}
+
+							configs, success := config.ReadYamlConfig()
+							if !success {
+								fmt.Println("not found profile")
+								os.Exit(0)
+							}
+							_, ok := configs.Keys[key]
+							if !ok {
+								fmt.Printf("add the key if necessary, Please execute: %s keys add %s %s\n", config.ProjectName, key, value)
+								os.Exit(0)
+							}
+
+							configs.Keys[key] = config.PrivateKeyPath(value)
+							config.WriteProfile(configs)
+							// 显示keys列表
+							config.ShowKeys(configs)
+							return nil
+						},
+					},
 				},
 			},
 		},
 	}
 
 	err := app.Run(os.Args)
-	common.CheckErr(err)
+	config.CheckErr(err)
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
-	"hssh/common"
 	"hssh/config"
 	"io"
 	"io/ioutil"
@@ -25,7 +24,7 @@ type Terminal struct {
 
 func OpenSSH(c config.Server, key string) {
 	if c.Host == "" {
-		common.CheckErr(errors.New("Host 必须存在"))
+		config.CheckErr(errors.New("Host 必须存在"))
 	}
 
 	var (
@@ -56,7 +55,7 @@ func OpenSSH(c config.Server, key string) {
 		auth = append(auth, ssh.Password(c.Password))
 	} else if c.AuthMethod == "key" {
 		pemBytes, err := ioutil.ReadFile(key)
-		common.CheckErr(err)
+		config.CheckErr(err)
 
 		var signer ssh.Signer
 		if c.KeyPassphrase == "" {
@@ -64,10 +63,10 @@ func OpenSSH(c config.Server, key string) {
 		} else {
 			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
 		}
-		common.CheckErr(err)
+		config.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
 	} else {
-		common.CheckErr(errors.New("auth method only supports password and key"))
+		config.CheckErr(errors.New("auth method only supports password and key"))
 	}
 
 	conf = ssh.Config{
@@ -97,12 +96,12 @@ func OpenSSH(c config.Server, key string) {
 	// 创建 client
 	addr = fmt.Sprintf("%s:%d", c.Host, port)
 	client, err = ssh.Dial("tcp", addr, sshConfig)
-	common.CheckErr(err)
+	config.CheckErr(err)
 	defer client.Close()
 
 	// 获取 session
 	err = newSession(client)
-	common.CheckErr(err)
+	config.CheckErr(err)
 }
 
 // 解决当本地调整了终端大小后，远程终端毫无反应的问题

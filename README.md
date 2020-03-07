@@ -36,6 +36,19 @@ $ hssh edit [-i host] [-u nameuser] [-p port] [--auth method] [-pass password] [
 # 卸载
 $ hssh uninstall [--all]
 # --all: 连同配置文件一起删除，不带此参数则保留配置文件
+
+
+# ---- keys 管理 ----
+# 查看 keys 列表
+# hssh keys
+# 查看指定 key 的值
+# hssh keys key
+# 添加一个 key 到 kyes
+# hssh keys add key path
+# 编辑 key 的值
+# hssh keys edit key path
+# 删除指定的 key
+# hssh keys rm key
 ```
 
 ## 配置文件位置及格式

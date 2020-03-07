@@ -1,4 +1,4 @@
-package common
+package config
 
 import (
 	"fmt"
@@ -33,18 +33,29 @@ func CheckFileISExist(filename string) bool {
 	return exist
 }
 
-// 返回私钥的路径
-func PrivateKeyPath(path string) string {
-	if path2.IsAbs(path) {
-		return path
-	}
-	return path2.Join(HomePath(), path)
-}
-
 // 删除当前执行程序
 func DelCurrentApp() {
 	file, _ := exec.LookPath(os.Args[0])
 	path, _ := filepath.Abs(file)
 	err := os.Remove(path)
 	CheckErr(err)
+}
+
+// 返回私钥的路径
+func PrivateKeyPath(path string) string {
+	if path2.IsAbs(path) {
+		return path
+	}
+	fmt.Printf("The current path is not an absolute path, will use {home path}/%s\n\n", path)
+	return path2.Join(HomePath(), path)
+}
+
+
+// 显示keys列表
+func ShowKeys(configs Config) {
+	index := 1
+	for k, v := range configs.Keys {
+		fmt.Printf("%02d. %s: %s\n", index, k, v)
+		index++
+	}
 }
