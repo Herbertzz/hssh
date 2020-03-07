@@ -120,10 +120,6 @@ func app() {
 						// 认证方式
 						authMethod := c.String("auth")
 						if authMethod == "password" {
-							if c.String("password") == "" {
-								fmt.Println("Error: auth method is password, cannot be empty, Try adding '--pass'")
-								return nil
-							}
 							session.Password = c.String("password")
 						} else if authMethod == "key" {
 							if c.String("private-key") == "" {
@@ -286,10 +282,6 @@ func app() {
 						// 认证方式
 						authMethod := c.String("auth")
 						if authMethod == "password" {
-							if c.String("password") == "" {
-								fmt.Println("Error: auth method is password, cannot be empty, Try adding '--pass'")
-								return nil
-							}
 							session.Password = c.String("password")
 							session.AuthMethod = authMethod
 							// 清除key认证的值

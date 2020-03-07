@@ -16,7 +16,7 @@ $ hssh add -i host [-u nameuser] [-p port] [--auth method] [-pass password] [--k
 # [-u nameuser]: 用户名(默认值: root), 可选
 # [-p port]: 端口(默认值: 22), 可选
 # [--auth method]: 认证方式(默认值: password), 可选, 只支持 password 和 key
-# [-pass password]: 密码认证, --auth 为 password 时, 必须存在
+# [-pass password]: 密码认证, --auth 为 password 且该字段为空时，会在登录时询问用户输入密码
 # [--key private-key]: 密钥认证(默认值: default), 可选, 对应配置文件 keys 字段
 # [--key-pass key-passphrase]: 密钥密码, 可选
 # alias: 保存的别名，必要

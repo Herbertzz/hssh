@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/ssh"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -20,6 +22,16 @@ type Terminal struct {
 	stdout  io.Reader
 	stdin   io.Writer
 	stderr  io.Reader
+}
+
+// 询问用户输入密码
+func getPass() (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter password: ")
+	text, _ := reader.ReadString('\n')
+	// 去除换行符
+	text = strings.Replace(text, "\n", "", -1)
+	return text, nil
 }
 
 func OpenSSH(c config.Server, key string) {
@@ -52,7 +64,11 @@ func OpenSSH(c config.Server, key string) {
 
 	auth = make([]ssh.AuthMethod, 0)
 	if c.AuthMethod == "password" {
-		auth = append(auth, ssh.Password(c.Password))
+		if c.Password == "" {
+			auth = append(auth, ssh.PasswordCallback(getPass))
+		} else {
+			auth = append(auth, ssh.Password(c.Password))
+		}
 	} else if c.AuthMethod == "key" {
 		pemBytes, err := ioutil.ReadFile(key)
 		config.CheckErr(err)
