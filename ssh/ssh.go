@@ -65,7 +65,7 @@ func OpenSSH(c config.Server, key string) {
 	auth = make([]ssh.AuthMethod, 0)
 	if c.AuthMethod == "password" {
 		if c.Password == "" {
-			auth = append(auth, ssh.PasswordCallback(getPass))
+			auth = append(auth, ssh.RetryableAuthMethod(ssh.PasswordCallback(getPass), 3))
 		} else {
 			auth = append(auth, ssh.Password(c.Password))
 		}
