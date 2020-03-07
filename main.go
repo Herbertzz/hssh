@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	app()
+}
+
+func app()  {
 	app := &cli.App{
 		Name:    config.ProjectName,
 		Usage:   "manage ssh sessions",
@@ -255,6 +259,23 @@ func main() {
 					}
 					sessions[dst] = session
 					config.WriteYamlConfig(sessions)
+					return nil
+				},
+			},
+			{
+				Name: "uninstall",
+				Usage: "unistall the app",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:     "all",
+						Usage:    "Delete with the configuration file",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					if c.Bool("all") {
+						config.DelYamlFile()
+					}
+					common.DelCurrentApp()
 					return nil
 				},
 			},

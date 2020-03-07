@@ -3,8 +3,10 @@ package common
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	path2 "path"
+	"path/filepath"
 )
 
 // 检测是否有异常，如有则直接停止应用
@@ -37,4 +39,12 @@ func PrivateKeyPath(path string) string {
 		return path
 	}
 	return path2.Join(HomePath(), path)
+}
+
+// 删除当前执行程序
+func DelCurrentApp() {
+	file, _ := exec.LookPath(os.Args[0])
+	path, _ := filepath.Abs(file)
+	err := os.Remove(path)
+	CheckErr(err)
 }

@@ -24,6 +24,6 @@ type Config struct {
 
 func init() {
 	ProjectName = "hssh"
-	Version = "0.1.12-beta"
+	Version = "0.2.12-beta"
 	YamlPath = path2.Join(common.HomePath(), ".hssh.yaml")
 }

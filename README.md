@@ -32,6 +32,10 @@ $ hssh rm [alias]
 $ hssh edit -d alias [-i host] [-u nameuser] [-p port] [-pass password] [--key private-key] [--key-pass key-passphrase] [-h]
 # -d alias: 要修改的别名
 # 其他同 hssh add 的参数
+
+# 卸载
+$ hssh uninstall [--all]
+# --all: 连同配置文件一起删除，不带此参数则保留配置文件
 ```
 
 ## 配置文件位置及格式
