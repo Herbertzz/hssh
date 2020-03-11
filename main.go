@@ -6,6 +6,8 @@ import (
 	"hssh/config"
 	"hssh/ssh"
 	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 func main() {
@@ -329,7 +331,13 @@ func app() {
 					if c.Bool("all") {
 						config.DelYamlFile()
 					}
-					config.DelCurrentApp()
+					// 获取当前执行程序的绝对路径并删除该程序
+					file, err := exec.LookPath(os.Args[0])
+					config.CheckErr(err)
+					path, err := filepath.Abs(file)
+					config.CheckErr(err)
+					err = os.Remove(path)
+					config.CheckErr(err)
 					return nil
 				},
 			},
@@ -387,7 +395,9 @@ func app() {
 								fmt.Printf("Modify the key if necessary, Please execute: %s keys edit %s %s\n", config.ProjectName, key, value)
 								os.Exit(0)
 							}
-							configs.Keys[key] = config.PrivateKeyPath(value)
+							path, err := config.PrivateKeyPath(value)
+							config.CheckErr(err)
+							configs.Keys[key] = path
 							config.WriteProfile(configs)
 							// 显示keys列表
 							config.ShowKeys(configs)
@@ -447,7 +457,9 @@ func app() {
 								os.Exit(0)
 							}
 
-							configs.Keys[key] = config.PrivateKeyPath(value)
+							path, err := config.PrivateKeyPath(value)
+							config.CheckErr(err)
+							configs.Keys[key] = path
 							config.WriteProfile(configs)
 							// 显示keys列表
 							config.ShowKeys(configs)

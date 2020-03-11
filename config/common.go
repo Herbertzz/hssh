@@ -1,12 +1,11 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/user"
 	path2 "path"
-	"path/filepath"
 )
 
 // 检测是否有异常，如有则直接停止应用
@@ -18,10 +17,12 @@ func CheckErr(err error) {
 }
 
 // 返回当前用户的 home 路径
-func HomePath() string {
+func HomePath() (string, error) {
 	u, err := user.Current()
-	CheckErr(err)
-	return u.HomeDir
+	if err != nil {
+		return "", err
+	}
+	return u.HomeDir, nil
 }
 
 // 判断文件是否存在
@@ -33,21 +34,24 @@ func CheckFileISExist(filename string) bool {
 	return exist
 }
 
-// 删除当前执行程序
-func DelCurrentApp() {
-	file, _ := exec.LookPath(os.Args[0])
-	path, _ := filepath.Abs(file)
-	err := os.Remove(path)
-	CheckErr(err)
-}
-
 // 返回私钥的路径
-func PrivateKeyPath(path string) string {
+func PrivateKeyPath(path string) (string, error) {
 	if path2.IsAbs(path) {
-		return path
+		if !CheckFileISExist(path) {
+			return "", errors.New("private key does not exist")
+		}
+		return path, nil
 	}
 	fmt.Printf("The current path is not an absolute path, will use {home path}/%s\n\n", path)
-	return path2.Join(HomePath(), path)
+	homePath, err := HomePath()
+	if err != nil {
+		return "", err
+	}
+	path = path2.Join(homePath, path)
+	if !CheckFileISExist(path) {
+		return "", errors.New("private key does not exist")
+	}
+	return path, nil
 }
 
 
