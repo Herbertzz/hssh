@@ -24,102 +24,6 @@ type Terminal struct {
 	stderr  io.Reader
 }
 
-// 询问用户输入密码
-func getPass() (string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter password: ")
-	text, _ := reader.ReadString('\n')
-	// 去除换行符
-	text = strings.Replace(text, "\n", "", -1)
-	return text, nil
-}
-
-func OpenSSH(c config.Server, key string) {
-	if c.Host == "" {
-		config.CheckErr(errors.New("Host 必须存在"))
-	}
-
-	var (
-		user      string
-		port      int
-		addr      string
-		auth      []ssh.AuthMethod
-		conf    ssh.Config
-		sshConfig *ssh.ClientConfig
-		client    *ssh.Client
-		err       error
-	)
-
-	if c.User == "" {
-		user = "root"
-	} else {
-		user = c.User
-	}
-
-	if c.Port == 0 {
-		port = 22
-	} else {
-		port = c.Port
-	}
-
-	auth = make([]ssh.AuthMethod, 0)
-	if c.AuthMethod == "password" {
-		if c.Password == "" {
-			auth = append(auth, ssh.RetryableAuthMethod(ssh.PasswordCallback(getPass), 3))
-		} else {
-			auth = append(auth, ssh.Password(c.Password))
-		}
-	} else if c.AuthMethod == "key" {
-		pemBytes, err := ioutil.ReadFile(key)
-		config.CheckErr(err)
-
-		var signer ssh.Signer
-		if c.KeyPassphrase == "" {
-			signer, err = ssh.ParsePrivateKey(pemBytes)
-		} else {
-			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
-		}
-		config.CheckErr(err)
-		auth = append(auth, ssh.PublicKeys(signer))
-	} else {
-		config.CheckErr(errors.New("auth method only supports password and key"))
-	}
-
-	conf = ssh.Config{
-		Ciphers: []string{
-			"aes128-ctr",
-			"aes192-ctr",
-			"aes256-ctr",
-			"aes128-gcm@openssh.com",
-			"arcfour256",
-			"arcfour128",
-			"aes128-cbc",
-			"3des-cbc",
-			"aes192-cbc",
-			"aes256-cbc",
-		},
-	}
-
-	// 创建 ssh 配置
-	sshConfig = &ssh.ClientConfig{
-		User:            user,
-		Auth:            auth,
-		Config:          conf,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
-	}
-
-	// 创建 client
-	addr = fmt.Sprintf("%s:%d", c.Host, port)
-	client, err = ssh.Dial("tcp", addr, sshConfig)
-	config.CheckErr(err)
-	defer client.Close()
-
-	// 获取 session
-	err = newSession(client)
-	config.CheckErr(err)
-}
-
 // 解决当本地调整了终端大小后，远程终端毫无反应的问题
 // 解决方案：启动一个 goroutine 在后台不断监听窗口改变事件，然后调用 WindowChange 即可
 // PS：*ssh.Session 上有一个 WindowChange 方法，用于向远端发送窗口调整事件
@@ -166,9 +70,9 @@ func (t *Terminal) updateTerminalSize() {
 func (t *Terminal) interactiveSession() error {
 	defer func() {
 		if t.exitMsg == "" {
-			fmt.Fprintln(os.Stdout, "the connection was closed on the remote side on ", time.Now().Format(time.RFC822))
+			_, _ = fmt.Fprintln(os.Stdout, "the connection was closed on the remote side on ", time.Now().Format(time.RFC822))
 		} else {
-			fmt.Fprintln(os.Stdout, t.exitMsg)
+			_, _ = fmt.Fprintln(os.Stdout, t.exitMsg)
 		}
 	}()
 
@@ -242,6 +146,102 @@ func (t *Terminal) interactiveSession() error {
 		return err
 	}
 	return nil
+}
+
+// 询问用户输入密码
+func getPass() (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter password: ")
+	text, _ := reader.ReadString('\n')
+	// 去除换行符
+	text = strings.Replace(text, "\n", "", -1)
+	return text, nil
+}
+
+func OpenSSH(c config.Server, key string) {
+	if c.Host == "" {
+		config.CheckErr(errors.New("host not exist"))
+	}
+
+	var (
+		user      string
+		port      int
+		addr      string
+		auth      []ssh.AuthMethod
+		conf      ssh.Config
+		sshConfig *ssh.ClientConfig
+		client    *ssh.Client
+		err       error
+	)
+
+	if c.User == "" {
+		user = "root"
+	} else {
+		user = c.User
+	}
+
+	if c.Port == 0 {
+		port = 22
+	} else {
+		port = c.Port
+	}
+
+	auth = make([]ssh.AuthMethod, 0)
+	if c.AuthMethod == "password" {
+		if c.Password == "" {
+			auth = append(auth, ssh.RetryableAuthMethod(ssh.PasswordCallback(getPass), 3))
+		} else {
+			auth = append(auth, ssh.Password(c.Password))
+		}
+	} else if c.AuthMethod == "key" {
+		pemBytes, err := ioutil.ReadFile(key)
+		config.CheckErr(err)
+
+		var signer ssh.Signer
+		if c.KeyPassphrase == "" {
+			signer, err = ssh.ParsePrivateKey(pemBytes)
+		} else {
+			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
+		}
+		config.CheckErr(err)
+		auth = append(auth, ssh.PublicKeys(signer))
+	} else {
+		config.CheckErr(errors.New("auth method only supports password and key"))
+	}
+
+	conf = ssh.Config{
+		Ciphers: []string{
+			"aes128-ctr",
+			"aes192-ctr",
+			"aes256-ctr",
+			"aes128-gcm@openssh.com",
+			"arcfour256",
+			"arcfour128",
+			"aes128-cbc",
+			"3des-cbc",
+			"aes192-cbc",
+			"aes256-cbc",
+		},
+	}
+
+	// 创建 ssh 配置
+	sshConfig = &ssh.ClientConfig{
+		User:            user,
+		Auth:            auth,
+		Config:          conf,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         30 * time.Second,
+	}
+
+	// 创建 client
+	addr = fmt.Sprintf("%s:%d", c.Host, port)
+	client, err = ssh.Dial("tcp", addr, sshConfig)
+	config.CheckErr(err)
+	defer client.Close()
+
+	// 获取 session
+	err = newSession(client)
+	config.CheckErr(err)
 }
 
 // 创建一个新的交互式 session

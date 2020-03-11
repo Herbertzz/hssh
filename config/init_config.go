@@ -5,7 +5,7 @@ import (
 )
 
 var ProjectName = "hssh"
-var Version = "0.4.14-beta"
+var Version = "0.4.17-beta"
 var YamlPath string
 var DefaultPrivateKey string
 
