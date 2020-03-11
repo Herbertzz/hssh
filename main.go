@@ -21,13 +21,13 @@ func app() {
 		Version: config.Version,
 		Action: func(c *cli.Context) error {
 			if c.Args().First() != "" {
-				configs, success := config.ReadYamlConfig()
-				sessions := configs.Servers
-				if !success {
+				configs, err := config.ReadYamlConfig()
+				config.CheckErr(err)
+				if len(configs.Servers) == 0 {
 					fmt.Printf("please execute command `%s h` for help\n", config.ProjectName)
 					os.Exit(0)
 				}
-				session, ok := sessions[c.Args().First()]
+				session, ok := configs.Servers[c.Args().First()]
 				if !ok {
 					fmt.Printf("do not find session named: %s\n", c.Args().First())
 					os.Exit(0)
@@ -96,7 +96,8 @@ func app() {
 				},
 				Action: func(c *cli.Context) error {
 					if arg := c.Args().First(); arg != "" {
-						configs, _ := config.ReadYamlConfig()
+						configs, err := config.ReadYamlConfig()
+						config.CheckErr(err)
 						sessions := configs.Servers
 						if len(sessions) == 0 {
 							sessions = make(map[string]config.Server)
@@ -107,8 +108,9 @@ func app() {
 							os.Exit(0)
 						}
 
-						session := config.Server{}
-						session.Host = c.String("host")
+						session := config.Server{
+							Host: c.String("host"),
+						}
 						if c.String("username") != "" {
 							session.User = c.String("username")
 						} else {
@@ -146,7 +148,9 @@ func app() {
 						session.AuthMethod = authMethod
 
 						sessions[arg] = session
-						config.WriteYamlConfig(sessions)
+						configs.Servers = sessions
+						err = config.WriteYamlConfig(configs)
+						config.CheckErr(err)
 						return nil
 					}
 					fmt.Println("alias is not set")
@@ -164,29 +168,32 @@ func app() {
 					},
 				},
 				Action: func(c *cli.Context) error {
+					configs, err := config.ReadYamlConfig()
+					config.CheckErr(err)
+
 					if c.Bool("all") {
-						sessions := make(map[string]config.Server, 0)
-						config.WriteYamlConfig(sessions)
+						configs.Servers = make(map[string]config.Server, 0)
+						err := config.WriteYamlConfig(configs)
+						config.CheckErr(err)
 						return nil
 					}
-					if arg := c.Args().First(); arg != "" {
-						configs, success := config.ReadYamlConfig()
-						sessions := configs.Servers
-						if !success {
-							fmt.Printf("list is empty, please execute command `%s add` first\n", config.ProjectName)
-							os.Exit(0)
-						}
-						_, ok := sessions[arg]
-						if !ok {
-							fmt.Printf("%s not found\n", arg)
-							os.Exit(0)
-						}
-						delete(sessions, arg)
-						config.WriteYamlConfig(sessions)
-						fmt.Println("success")
+
+					arg := c.Args().First()
+					if arg == "" {
+						fmt.Println("alias argument not set")
 						return nil
 					}
-					fmt.Println("alias argument not set")
+
+					_, ok := configs.Servers[arg]
+					if !ok {
+						fmt.Printf("%s not found\n", arg)
+						os.Exit(0)
+					}
+					delete(configs.Servers, arg)
+
+					err = config.WriteYamlConfig(configs)
+					config.CheckErr(err)
+					fmt.Println("success")
 					return nil
 				},
 			},
@@ -195,9 +202,10 @@ func app() {
 				Name:  "ls",
 				Usage: "show session list",
 				Action: func(c *cli.Context) error {
-					configs, success := config.ReadYamlConfig()
+					configs, err := config.ReadYamlConfig()
+					config.CheckErr(err)
 					sessions := configs.Servers
-					if !success {
+					if len(sessions) == 0 {
 						fmt.Printf("list is empty, please execute command `%s add` first\n", config.ProjectName)
 						os.Exit(0)
 					}
@@ -310,7 +318,9 @@ func app() {
 						}
 
 						sessions[arg] = session
-						config.WriteYamlConfig(sessions)
+						configs.Servers = sessions
+						err := config.WriteYamlConfig(configs)
+						config.CheckErr(err)
 						return nil
 					}
 					fmt.Println("alias is not set")
@@ -329,7 +339,9 @@ func app() {
 				},
 				Action: func(c *cli.Context) error {
 					if c.Bool("all") {
-						config.DelYamlFile()
+						// 删除配置文件
+						err := config.DelYamlFile()
+						config.CheckErr(err)
 					}
 					// 获取当前执行程序的绝对路径并删除该程序
 					file, err := exec.LookPath(os.Args[0])
@@ -346,11 +358,8 @@ func app() {
 				Name:  "keys",
 				Usage: "private keys manager",
 				Action: func(c *cli.Context) error {
-					configs, success := config.ReadYamlConfig()
-					if !success {
-						fmt.Println("not found profile")
-						os.Exit(0)
-					}
+					configs, err := config.ReadYamlConfig()
+					config.CheckErr(err)
 
 					// 显示key详情
 					if arg := c.Args().First(); arg != "" {
@@ -384,11 +393,9 @@ func app() {
 								os.Exit(0)
 							}
 
-							configs, success := config.ReadYamlConfig()
-							if !success {
-								fmt.Println("not found profile")
-								os.Exit(0)
-							}
+							configs, err := config.ReadYamlConfig()
+							config.CheckErr(err)
+
 							_, ok := configs.Keys[key]
 							if ok {
 								fmt.Printf("%s is already in key\n", key)
@@ -398,7 +405,8 @@ func app() {
 							path, err := config.PrivateKeyPath(value)
 							config.CheckErr(err)
 							configs.Keys[key] = path
-							config.WriteProfile(configs)
+							err = config.WriteYamlConfig(configs)
+							config.CheckErr(err)
 							// 显示keys列表
 							config.ShowKeys(configs)
 							return nil
@@ -410,11 +418,8 @@ func app() {
 						Usage: "remove a key to the keys",
 						Action: func(c *cli.Context) error {
 							if arg := c.Args().First(); arg != "" {
-								configs, success := config.ReadYamlConfig()
-								if !success {
-									fmt.Println("not found profile")
-									os.Exit(0)
-								}
+								configs, err := config.ReadYamlConfig()
+								config.CheckErr(err)
 
 								_, ok := configs.Keys[arg]
 								if !ok {
@@ -422,7 +427,8 @@ func app() {
 									os.Exit(0)
 								}
 								delete(configs.Keys, arg)
-								config.WriteProfile(configs)
+								err = config.WriteYamlConfig(configs)
+								config.CheckErr(err)
 								config.ShowKeys(configs)
 								return nil
 							}
@@ -446,11 +452,9 @@ func app() {
 								os.Exit(0)
 							}
 
-							configs, success := config.ReadYamlConfig()
-							if !success {
-								fmt.Println("not found profile")
-								os.Exit(0)
-							}
+							configs, err := config.ReadYamlConfig()
+							config.CheckErr(err)
+
 							_, ok := configs.Keys[key]
 							if !ok {
 								fmt.Printf("add the key if necessary, Please execute: %s keys add %s %s\n", config.ProjectName, key, value)
@@ -460,7 +464,8 @@ func app() {
 							path, err := config.PrivateKeyPath(value)
 							config.CheckErr(err)
 							configs.Keys[key] = path
-							config.WriteProfile(configs)
+							err = config.WriteYamlConfig(configs)
+							config.CheckErr(err)
 							// 显示keys列表
 							config.ShowKeys(configs)
 							return nil

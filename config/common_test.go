@@ -54,8 +54,8 @@ func TestHomePath(t *testing.T) {
 }
 
 func TestCheckFileISExist(t *testing.T) {
-	var tests = []struct{
-		in string
+	var tests = []struct {
+		in       string
 		expected bool
 	}{
 		{getExecPath(), true},
@@ -72,17 +72,17 @@ func TestCheckFileISExist(t *testing.T) {
 
 func TestPrivateKeyPath(t *testing.T) {
 	homePath, _ := HomePath()
-	var tests = []struct{
-		in string
+	var tests = []struct {
+		in       string
 		expected string
 	}{
 		{getExecPath(), getExecPath()},
 		{"/tmp/not_exist_file_8dfk3d9", ""},
-		{ ".ssh/id_rsa", homePath + "/.ssh/id_rsa"},
-		{ "no_exist_file_8mdf82li9", ""},
+		{".ssh/id_rsa", homePath + "/.ssh/id_rsa"},
+		{"no_exist_file_8mdf82li9", ""},
 	}
 
-	for _, tt := range tests  {
+	for _, tt := range tests {
 		actual, err := PrivateKeyPath(tt.in)
 		if actual != tt.expected {
 			t.Errorf("PrivateKeyPath(%s) = %s; expected %s; Error: %v", tt.in, actual, tt.expected, err)
@@ -92,12 +92,11 @@ func TestPrivateKeyPath(t *testing.T) {
 
 func TestShowKeys(t *testing.T) {
 	// 构造数据
-	var keys map[string]string
-	keys = make(map[string]string)
-	keys["default"] = "/Users/herbertzz/.ssh/id_rsa"
-	keys["mm"] = "dfsdfsf"
 	config := Config{
-		Keys:    keys,
+		Keys: map[string]string{
+			"default": "/Users/herbertzz/.ssh/id_rsa",
+			"xg":      "8msdfwr5544",
+		},
 	}
 
 	ShowKeys(config)
