@@ -71,8 +71,6 @@ func TestCheckFileISExist(t *testing.T) {
 }
 
 func TestPrivateKeyPath(t *testing.T) {
-	homePath, _ := HomePath()
-
 	var tests = []struct {
 		in       string
 		expected string
