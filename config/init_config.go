@@ -3,9 +3,8 @@ package config
 import (
 	path2 "path"
 )
-
-var ProjectName = "hssh"
-var Version = "0.4.17-beta"
+const PROJECTNAME = "hssh"
+const VERSION  = "0.4.18-beta"
 var YamlPath string
 var DefaultPrivateKey string
 
