@@ -8,7 +8,7 @@ import (
 	path2 "path"
 )
 
-// 检测是否有异常，如有则直接停止应用
+// CheckErr 检测是否有异常，如有则直接停止应用
 func CheckErr(err error) {
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
@@ -16,7 +16,7 @@ func CheckErr(err error) {
 	}
 }
 
-// 返回当前用户的 home 路径
+// HomePath 返回当前用户的 home 路径
 func HomePath() (string, error) {
 	u, err := user.Current()
 	if err != nil {
@@ -25,7 +25,7 @@ func HomePath() (string, error) {
 	return u.HomeDir, nil
 }
 
-// 判断文件是否存在
+// CheckFileISExist 判断文件是否存在
 func CheckFileISExist(filename string) bool {
 	exist := true
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
@@ -34,7 +34,7 @@ func CheckFileISExist(filename string) bool {
 	return exist
 }
 
-// 返回私钥的路径
+// PrivateKeyPath 返回私钥的路径
 func PrivateKeyPath(path string) (string, error) {
 	if path2.IsAbs(path) {
 		if !CheckFileISExist(path) {
@@ -54,8 +54,7 @@ func PrivateKeyPath(path string) (string, error) {
 	return path, nil
 }
 
-
-// 显示keys列表
+// ShowKeys 显示keys列表
 func ShowKeys(configs Config) {
 	index := 1
 	for k, v := range configs.Keys {

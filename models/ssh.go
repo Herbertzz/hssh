@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-type Terminal struct {
+type terminalInfo struct {
 	Session *ssh.Session
 	exitMsg string
 	stdout  io.Reader
@@ -27,7 +27,7 @@ type Terminal struct {
 // 解决当本地调整了终端大小后，远程终端毫无反应的问题
 // 解决方案：启动一个 goroutine 在后台不断监听窗口改变事件，然后调用 WindowChange 即可
 // PS：*ssh.Session 上有一个 WindowChange 方法，用于向远端发送窗口调整事件
-func (t *Terminal) updateTerminalSize() {
+func (t *terminalInfo) updateTerminalSize() {
 	go func() {
 		// 监听窗口变更事件
 		sigwinchCh := make(chan os.Signal, 1)
@@ -67,7 +67,7 @@ func (t *Terminal) updateTerminalSize() {
 }
 
 // 交互的 session
-func (t *Terminal) interactiveSession() error {
+func (t *terminalInfo) interactiveSession() error {
 	defer func() {
 		if t.exitMsg == "" {
 			_, _ = fmt.Fprintln(os.Stdout, "the connection was closed on the remote side on ", time.Now().Format(time.RFC822))
@@ -158,6 +158,7 @@ func getPass() (string, error) {
 	return text, nil
 }
 
+// OpenSSH 运行一个 ssh 会话
 func OpenSSH(c config.Server, key string) {
 	if c.Host == "" {
 		config.CheckErr(errors.New("host not exist"))
@@ -252,7 +253,7 @@ func newSession(client *ssh.Client) error {
 	}
 	defer session.Close()
 
-	s := Terminal{
+	s := terminalInfo{
 		Session: session,
 	}
 	return s.interactiveSession()

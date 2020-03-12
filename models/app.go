@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 )
 
+// StartAPP 运行程序
 func StartAPP() {
 	app := &cli.App{
 		Name:    config.PROJECTNAME,

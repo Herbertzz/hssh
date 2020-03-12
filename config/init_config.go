@@ -3,11 +3,16 @@ package config
 import (
 	path2 "path"
 )
+// PROJECTNAME 项目名
 const PROJECTNAME = "hssh"
+// VERSION 版本号
 const VERSION  = "0.4.18-beta"
+// YamlPath 配置文件路径
 var YamlPath string
+// DefaultPrivateKey 默认的私钥路径
 var DefaultPrivateKey string
 
+// Server 配置文件中的服务器配置结构
 type Server struct {
 	User          string `yaml:"username"`
 	Host          string `yaml:"host"`
@@ -18,6 +23,7 @@ type Server struct {
 	KeyPassphrase string `yaml:"key_passphrase,omitempty"`
 }
 
+// Config 配置文件结构
 type Config struct {
 	Keys    map[string]string `yaml:"keys"`
 	Servers map[string]Server `yaml:"servers,omitempty"`

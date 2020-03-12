@@ -18,7 +18,7 @@ func init() {
 	}
 }
 
-// 初始化配置文件
+// InitYamlConfig 初始化配置文件
 func InitYamlConfig() Config {
 	configs := Config{
 		Keys: map[string]string{"default": DefaultPrivateKey},
@@ -26,7 +26,7 @@ func InitYamlConfig() Config {
 	return configs
 }
 
-// 读取配置文件
+// ReadYamlConfig 读取配置文件
 func ReadYamlConfig() (Config, error) {
 	configs := Config{}
 	yaml, err := ioutil.ReadFile(YamlPath)
@@ -40,7 +40,7 @@ func ReadYamlConfig() (Config, error) {
 	return configs, nil
 }
 
-// 写入配置文件
+// WriteYamlConfig 写入配置文件
 func WriteYamlConfig(configs Config) error {
 	d, err := yaml2.Marshal(configs)
 	if err != nil {
@@ -64,7 +64,7 @@ func WriteYamlConfig(configs Config) error {
 	return nil
 }
 
-// 删除配置文件
+// DelYamlFile 删除配置文件
 func DelYamlFile() error {
 	if !CheckFileISExist(YamlPath) {
 		return nil
