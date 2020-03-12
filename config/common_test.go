@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -85,9 +87,11 @@ func TestPrivateKeyPath(t *testing.T) {
 	status := false
 	if !CheckFileISExist(DefaultPrivateKey) {
 		cmd := exec.Command("touch", DefaultPrivateKey)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
 		err := cmd.Run()
 		if err != nil {
-			t.Fatal(err)
+			t.Fatal(fmt.Sprint(err) + ": " + stderr.String())
 		}
 		status = true
 	}
