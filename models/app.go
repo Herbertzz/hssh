@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/urfave/cli/v2"
-	"hssh/config"
+	"hssh/conf"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,9 +12,9 @@ import (
 // StartAPP 运行程序
 func StartAPP() {
 	app := &cli.App{
-		Name:    config.PROJECTNAME,
+		Name:    conf.PROJECTNAME,
 		Usage:   "manage ssh sessions",
-		Version: config.VERSION,
+		Version: conf.VERSION,
 		Action:  actionOfOpenSSH,
 		Commands: []*cli.Command{
 			 commandOfAdd(),
@@ -27,18 +27,18 @@ func StartAPP() {
 	}
 
 	err := app.Run(os.Args)
-	config.CheckErr(err)
+	conf.CheckErr(err)
 }
 
 // 动作: 打开ssh会话
 func actionOfOpenSSH(c *cli.Context) error {
 	if c.Args().First() != "" {
 		// 读取配置文件
-		configs, err := config.ReadYamlConfig()
-		config.CheckErr(err)
+		configs, err := conf.ReadYamlConfig()
+		conf.CheckErr(err)
 		// 检查配置文件中服务器列表
 		if len(configs.Servers) == 0 {
-			fmt.Printf("list is empty, please execute command `%s add` first\n", config.PROJECTNAME)
+			fmt.Printf("list is empty, please execute command `%s add` first\n", conf.PROJECTNAME)
 			return nil
 		}
 		session, ok := configs.Servers[c.Args().First()]
@@ -59,7 +59,7 @@ func actionOfOpenSSH(c *cli.Context) error {
 		OpenSSH(session, key)
 		return nil
 	}
-	fmt.Printf("please execute command `%s h` for help\n", config.PROJECTNAME)
+	fmt.Printf("please execute command `%s h` for help\n", conf.PROJECTNAME)
 	return nil
 }
 
@@ -122,11 +122,11 @@ func actionOfAdd(c *cli.Context) error {
 		return nil
 	}
 	// 读取配置文件
-	configs, err := config.ReadYamlConfig()
-	config.CheckErr(err)
+	configs, err := conf.ReadYamlConfig()
+	conf.CheckErr(err)
 	sessions := configs.Servers
 	if len(sessions) == 0 {
-		sessions = make(map[string]config.Server)
+		sessions = make(map[string]conf.Server)
 	}
 	_, ok := sessions[arg]
 	if ok {
@@ -134,7 +134,7 @@ func actionOfAdd(c *cli.Context) error {
 		return nil
 	}
 	// 生成服务器配置
-	session := config.Server{
+	session := conf.Server{
 		Host: c.String("host"),
 	}
 	if c.String("username") != "" {
@@ -175,8 +175,8 @@ func actionOfAdd(c *cli.Context) error {
 
 	sessions[arg] = session
 	configs.Servers = sessions
-	err = config.WriteYamlConfig(configs)
-	config.CheckErr(err)
+	err = conf.WriteYamlConfig(configs)
+	conf.CheckErr(err)
 	return nil
 }
 
@@ -198,13 +198,13 @@ func commandOfRm() *cli.Command {
 // 动作: rm
 func actionOfRm(c *cli.Context) error {
 	// 读取配置
-	configs, err := config.ReadYamlConfig()
-	config.CheckErr(err)
+	configs, err := conf.ReadYamlConfig()
+	conf.CheckErr(err)
 	// 清空服务器列表
 	if c.Bool("all") {
-		configs.Servers = make(map[string]config.Server, 0)
-		err := config.WriteYamlConfig(configs)
-		config.CheckErr(err)
+		configs.Servers = make(map[string]conf.Server, 0)
+		err := conf.WriteYamlConfig(configs)
+		conf.CheckErr(err)
 		return nil
 	}
 	// 检查alias参数是否存在
@@ -221,8 +221,8 @@ func actionOfRm(c *cli.Context) error {
 	}
 	delete(configs.Servers, arg)
 
-	err = config.WriteYamlConfig(configs)
-	config.CheckErr(err)
+	err = conf.WriteYamlConfig(configs)
+	conf.CheckErr(err)
 	fmt.Println("success")
 	return nil
 }
@@ -239,12 +239,12 @@ func commandOfLs() *cli.Command {
 // 动作: ls
 func actionOfLs(c *cli.Context) error {
 	// 读取配置
-	configs, err := config.ReadYamlConfig()
-	config.CheckErr(err)
+	configs, err := conf.ReadYamlConfig()
+	conf.CheckErr(err)
 	// 检查是否存在服务器配置
 	sessions := configs.Servers
 	if len(sessions) == 0 {
-		fmt.Printf("list is empty, please execute command `%s add` first\n", config.PROJECTNAME)
+		fmt.Printf("list is empty, please execute command `%s add` first\n", conf.PROJECTNAME)
 		return nil
 	}
 	// 打印服务器列表
@@ -320,7 +320,7 @@ func actionOfEdit(c *cli.Context) error {
 		return nil
 	}
 	// 读取配置
-	configs, _ := config.ReadYamlConfig()
+	configs, _ := conf.ReadYamlConfig()
 	sessions := configs.Servers
 	_, ok := sessions[arg]
 	if !ok {
@@ -368,8 +368,8 @@ func actionOfEdit(c *cli.Context) error {
 	// 更新配置文件
 	sessions[arg] = session
 	configs.Servers = sessions
-	err := config.WriteYamlConfig(configs)
-	config.CheckErr(err)
+	err := conf.WriteYamlConfig(configs)
+	conf.CheckErr(err)
 	return nil
 }
 
@@ -392,16 +392,16 @@ func commandOfUninstall() *cli.Command {
 func actionOfUninstall(c *cli.Context) error {
 	if c.Bool("all") {
 		// 删除配置文件
-		err := config.DelYamlFile()
-		config.CheckErr(err)
+		err := conf.DelYamlFile()
+		conf.CheckErr(err)
 	}
 	// 获取当前执行程序的绝对路径并删除该程序
 	file, err := exec.LookPath(os.Args[0])
-	config.CheckErr(err)
+	conf.CheckErr(err)
 	path, err := filepath.Abs(file)
-	config.CheckErr(err)
+	conf.CheckErr(err)
 	err = os.Remove(path)
-	config.CheckErr(err)
+	conf.CheckErr(err)
 	return nil
 }
 
@@ -412,8 +412,8 @@ func commandOfKeys() *cli.Command {
 		Usage: "private keys manager",
 		Action: func(c *cli.Context) error {
 			// 读取配置文件
-			configs, err := config.ReadYamlConfig()
-			config.CheckErr(err)
+			configs, err := conf.ReadYamlConfig()
+			conf.CheckErr(err)
 
 			// 显示key详情
 			if arg := c.Args().First(); arg != "" {
@@ -427,7 +427,7 @@ func commandOfKeys() *cli.Command {
 			}
 
 			// 显示keys列表
-			config.ShowKeys(configs)
+			conf.ShowKeys(configs)
 			return nil
 		},
 		Subcommands: []*cli.Command{
@@ -455,22 +455,22 @@ func keysSubcommandsOfAdd() *cli.Command {
 				os.Exit(0)
 			}
 
-			configs, err := config.ReadYamlConfig()
-			config.CheckErr(err)
+			configs, err := conf.ReadYamlConfig()
+			conf.CheckErr(err)
 
 			_, ok := configs.Keys[key]
 			if ok {
 				fmt.Printf("%s is already in key\n", key)
-				fmt.Printf("Modify the key if necessary, Please execute: %s keys edit %s %s\n", config.PROJECTNAME, key, value)
+				fmt.Printf("Modify the key if necessary, Please execute: %s keys edit %s %s\n", conf.PROJECTNAME, key, value)
 				os.Exit(0)
 			}
-			path, err := config.PrivateKeyPath(value)
-			config.CheckErr(err)
+			path, err := conf.PrivateKeyPath(value)
+			conf.CheckErr(err)
 			configs.Keys[key] = path
-			err = config.WriteYamlConfig(configs)
-			config.CheckErr(err)
+			err = conf.WriteYamlConfig(configs)
+			conf.CheckErr(err)
 			// 显示keys列表
-			config.ShowKeys(configs)
+			conf.ShowKeys(configs)
 			return nil
 		},
 	}
@@ -483,8 +483,8 @@ func keysSubcommandsOfRm() *cli.Command {
 		Usage: "remove a key to the keys",
 		Action: func(c *cli.Context) error {
 			if arg := c.Args().First(); arg != "" {
-				configs, err := config.ReadYamlConfig()
-				config.CheckErr(err)
+				configs, err := conf.ReadYamlConfig()
+				conf.CheckErr(err)
 
 				_, ok := configs.Keys[arg]
 				if !ok {
@@ -492,9 +492,9 @@ func keysSubcommandsOfRm() *cli.Command {
 					os.Exit(0)
 				}
 				delete(configs.Keys, arg)
-				err = config.WriteYamlConfig(configs)
-				config.CheckErr(err)
-				config.ShowKeys(configs)
+				err = conf.WriteYamlConfig(configs)
+				conf.CheckErr(err)
+				conf.ShowKeys(configs)
 				return nil
 			}
 			fmt.Println("key not set")
@@ -520,22 +520,22 @@ func keysSubcommandsOfEdit() *cli.Command {
 				os.Exit(0)
 			}
 
-			configs, err := config.ReadYamlConfig()
-			config.CheckErr(err)
+			configs, err := conf.ReadYamlConfig()
+			conf.CheckErr(err)
 
 			_, ok := configs.Keys[key]
 			if !ok {
-				fmt.Printf("add the key if necessary, Please execute: %s keys add %s %s\n", config.PROJECTNAME, key, value)
+				fmt.Printf("add the key if necessary, Please execute: %s keys add %s %s\n", conf.PROJECTNAME, key, value)
 				os.Exit(0)
 			}
 
-			path, err := config.PrivateKeyPath(value)
-			config.CheckErr(err)
+			path, err := conf.PrivateKeyPath(value)
+			conf.CheckErr(err)
 			configs.Keys[key] = path
-			err = config.WriteYamlConfig(configs)
-			config.CheckErr(err)
+			err = conf.WriteYamlConfig(configs)
+			conf.CheckErr(err)
 			// 显示keys列表
-			config.ShowKeys(configs)
+			conf.ShowKeys(configs)
 			return nil
 		},
 	}

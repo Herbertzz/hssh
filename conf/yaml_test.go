@@ -1,4 +1,4 @@
-package config
+package conf
 
 import (
 	"os/exec"
@@ -12,7 +12,7 @@ func TestInitYamlConfig(t *testing.T) {
 	}
 	actual := InitYamlConfig()
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatal("default config error")
+		t.Fatal("default conf error")
 	}
 }
 

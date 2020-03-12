@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
-	"hssh/config"
+	"hssh/conf"
 	"io"
 	"io/ioutil"
 	"os"
@@ -159,9 +159,9 @@ func getPass() (string, error) {
 }
 
 // OpenSSH 运行一个 ssh 会话
-func OpenSSH(c config.Server, key string) {
+func OpenSSH(c conf.Server, key string) {
 	if c.Host == "" {
-		config.CheckErr(errors.New("host not exist"))
+		conf.CheckErr(errors.New("host not exist"))
 	}
 
 	var (
@@ -196,7 +196,7 @@ func OpenSSH(c config.Server, key string) {
 		}
 	} else if c.AuthMethod == "key" {
 		pemBytes, err := ioutil.ReadFile(key)
-		config.CheckErr(err)
+		conf.CheckErr(err)
 
 		var signer ssh.Signer
 		if c.KeyPassphrase == "" {
@@ -204,10 +204,10 @@ func OpenSSH(c config.Server, key string) {
 		} else {
 			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
 		}
-		config.CheckErr(err)
+		conf.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
 	} else {
-		config.CheckErr(errors.New("auth method only supports password and key"))
+		conf.CheckErr(errors.New("auth method only supports password and key"))
 	}
 
 	conf = ssh.Config{
@@ -237,12 +237,12 @@ func OpenSSH(c config.Server, key string) {
 	// 创建 client
 	addr = fmt.Sprintf("%s:%d", c.Host, port)
 	client, err = ssh.Dial("tcp", addr, sshConfig)
-	config.CheckErr(err)
+	conf.CheckErr(err)
 	defer client.Close()
 
 	// 获取 session
 	err = newSession(client)
-	config.CheckErr(err)
+	conf.CheckErr(err)
 }
 
 // 创建一个新的交互式 session
