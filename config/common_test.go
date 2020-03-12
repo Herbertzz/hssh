@@ -84,9 +84,9 @@ func TestPrivateKeyPath(t *testing.T) {
 	}
 
 	// 默认私钥不存在时，创建虚拟的私钥
-	status := false
+ 	status := false
 	if !CheckFileISExist(DefaultPrivateKey) {
-		cmd := exec.Command("touch", DefaultPrivateKey)
+		cmd := exec.Command("mkdir", "-p", DefaultPrivateKey)
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		err := cmd.Run()
@@ -98,7 +98,7 @@ func TestPrivateKeyPath(t *testing.T) {
 	// 完成时，删除该虚拟私钥
 	defer func() {
 		if status {
-			cmd := exec.Command("rm", DefaultPrivateKey)
+			cmd := exec.Command("rm", "-rf", DefaultPrivateKey)
 			err := cmd.Run()
 			if err != nil {
 				t.Fatal(err)
