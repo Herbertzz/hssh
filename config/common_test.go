@@ -72,22 +72,42 @@ func TestCheckFileISExist(t *testing.T) {
 
 func TestPrivateKeyPath(t *testing.T) {
 	homePath, _ := HomePath()
+
 	var tests = []struct {
 		in       string
 		expected string
 	}{
 		{getExecPath(), getExecPath()},
 		{"/tmp/not_exist_file_8dfk3d9", ""},
-		{".ssh/id_rsa", homePath + "/.ssh/id_rsa"},
+		{".ssh/id_rsa", DefaultPrivateKey},
 		{"no_exist_file_8mdf82li9", ""},
 	}
 
 	for _, tt := range tests {
+		if tt.in == ".ssh/id_rsa" {
+			// 默认私钥不存在时，创建虚拟的私钥
+			if !CheckFileISExist(YamlPath) {
+				cmd := exec.Command("touch", DefaultPrivateKey)
+				err := cmd.Run()
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+		}
 		actual, err := PrivateKeyPath(tt.in)
 		if actual != tt.expected {
 			t.Errorf("PrivateKeyPath(%s) = %s; expected %s; Error: %v", tt.in, actual, tt.expected, err)
 		}
 	}
+
+	// 完成时，删除该虚拟私钥
+	defer func() {
+		cmd := exec.Command("rm", DefaultPrivateKey)
+		err := cmd.Run()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
 }
 
 func TestShowKeys(t *testing.T) {
