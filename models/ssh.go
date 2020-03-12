@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
-	"github.com/Herbertzz/hssh/config"
+	"hssh/config"
 	"io"
 	"io/ioutil"
 	"os"

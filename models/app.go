@@ -2,8 +2,8 @@ package models
 
 import (
 	"fmt"
-	"github.com/urfave/cli"
-	"github.com/Herbertzz/hssh/config"
+	"github.com/urfave/cli/v2"
+	"hssh/config"
 	"os"
 	"os/exec"
 	"path/filepath"

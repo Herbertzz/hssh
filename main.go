@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Herbertzz/hssh/models"
+	"hssh/models"
 )
 
 func main() {
