@@ -1,4 +1,4 @@
-PROJECT_NAME := "github.com/Herbertzz/hssh"
+PROJECT_NAME := "."
 PKG := "$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
