@@ -161,7 +161,7 @@ func getPass() (string, error) {
 // OpenSSH 运行一个 ssh 会话
 func OpenSSH(c conf.Server, key string) {
 	if c.Host == "" {
-		conf.CheckErr(errors.New("host not exist"))
+		CheckErr(errors.New("host not exist"))
 	}
 
 	var (
@@ -169,7 +169,7 @@ func OpenSSH(c conf.Server, key string) {
 		port      int
 		addr      string
 		auth      []ssh.AuthMethod
-		conf      ssh.Config
+		config      ssh.Config
 		sshConfig *ssh.ClientConfig
 		client    *ssh.Client
 		err       error
@@ -196,7 +196,7 @@ func OpenSSH(c conf.Server, key string) {
 		}
 	} else if c.AuthMethod == "key" {
 		pemBytes, err := ioutil.ReadFile(key)
-		conf.CheckErr(err)
+		CheckErr(err)
 
 		var signer ssh.Signer
 		if c.KeyPassphrase == "" {
@@ -204,13 +204,13 @@ func OpenSSH(c conf.Server, key string) {
 		} else {
 			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
 		}
-		conf.CheckErr(err)
+		CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
 	} else {
-		conf.CheckErr(errors.New("auth method only supports password and key"))
+		CheckErr(errors.New("auth method only supports password and key"))
 	}
 
-	conf = ssh.Config{
+	config = ssh.Config{
 		Ciphers: []string{
 			"aes128-ctr",
 			"aes192-ctr",
@@ -229,7 +229,7 @@ func OpenSSH(c conf.Server, key string) {
 	sshConfig = &ssh.ClientConfig{
 		User:            user,
 		Auth:            auth,
-		Config:          conf,
+		Config:          config,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         30 * time.Second,
 	}
@@ -237,12 +237,12 @@ func OpenSSH(c conf.Server, key string) {
 	// 创建 client
 	addr = fmt.Sprintf("%s:%d", c.Host, port)
 	client, err = ssh.Dial("tcp", addr, sshConfig)
-	conf.CheckErr(err)
+	CheckErr(err)
 	defer client.Close()
 
 	// 获取 session
 	err = newSession(client)
-	conf.CheckErr(err)
+	CheckErr(err)
 }
 
 // 创建一个新的交互式 session

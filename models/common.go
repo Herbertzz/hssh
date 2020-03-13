@@ -1,8 +1,9 @@
-package conf
+package models
 
 import (
 	"errors"
 	"fmt"
+	"hssh/conf"
 	"os"
 	"os/user"
 	path2 "path"
@@ -55,7 +56,7 @@ func PrivateKeyPath(path string) (string, error) {
 }
 
 // ShowKeys 显示keys列表
-func ShowKeys(configs Config) {
+func ShowKeys(configs conf.Config) {
 	index := 1
 	for k, v := range configs.Keys {
 		fmt.Printf("%02d. %s: %s\n", index, k, v)

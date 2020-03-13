@@ -2,6 +2,7 @@ package conf
 
 import (
 	yaml2 "gopkg.in/yaml.v2"
+	"hssh/models"
 	"io"
 	"io/ioutil"
 	"log"
@@ -9,7 +10,7 @@ import (
 )
 
 func init() {
-	if !CheckFileISExist(YamlPath) {
+	if !models.CheckFileISExist(YamlPath) {
 		configs := InitYamlConfig()
 		err := WriteYamlConfig(configs)
 		if err != nil {
@@ -66,7 +67,7 @@ func WriteYamlConfig(configs Config) error {
 
 // DelYamlFile 删除配置文件
 func DelYamlFile() error {
-	if !CheckFileISExist(YamlPath) {
+	if !models.CheckFileISExist(YamlPath) {
 		return nil
 	}
 	err := os.Remove(YamlPath)

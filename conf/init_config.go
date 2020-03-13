@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"hssh/models"
 	path2 "path"
 )
 // PROJECTNAME 项目名
@@ -30,8 +31,8 @@ type Config struct {
 }
 
 func init() {
-	homePath, err := HomePath()
-	CheckErr(err)
+	homePath, err := models.HomePath()
+	models.CheckErr(err)
 
 	YamlPath = path2.Join(homePath, ".hssh.yaml")
 	DefaultPrivateKey = path2.Join(homePath, ".ssh/id_rsa")

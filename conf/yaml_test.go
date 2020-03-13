@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"hssh/models"
 	"os/exec"
 	"reflect"
 	"testing"
@@ -36,7 +37,7 @@ func TestWriteYamlConfig(t *testing.T) {
 
 func TestDelYamlFile(t *testing.T) {
 	// 备份配置文件
-	if CheckFileISExist(YamlPath) {
+	if models.CheckFileISExist(YamlPath) {
 		cmd := exec.Command("cp", YamlPath, YamlPath + "_test_backup")
 		err := cmd.Run()
 		if err != nil {
