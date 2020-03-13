@@ -8,7 +8,7 @@ jobs:
   release:
     name: Release on GitHub
     runs-on: ubuntu-latest
-    setps:
+    steps:
       - name: Check out code
         uses: actions/checkout@v1
       - name: Validates Go releaser config
