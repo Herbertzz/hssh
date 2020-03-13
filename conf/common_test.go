@@ -84,7 +84,7 @@ func TestPrivateKeyPath(t *testing.T) {
 	}
 
 	// 默认私钥不存在时，创建虚拟的私钥
- 	status := false
+	status := false
 	if !CheckFileISExist(DefaultPrivateKey) {
 		cmd := exec.Command("mkdir", "-p", DefaultPrivateKey)
 		var stderr bytes.Buffer
@@ -117,9 +117,9 @@ func TestPrivateKeyPath(t *testing.T) {
 func TestShowKeys(t *testing.T) {
 	// 构造数据
 	config := Config{
-		Keys: map[string]string{
-			"default": "/Users/herbertzz/.ssh/id_rsa",
-			"xg":      "8msdfwr5544",
+		Keys: map[string]Key{
+			"default": {Path: "/Users/herbertzz/.ssh/id_rsa"},
+			"xg":      {Path: "8msdfwr5544"},
 		},
 	}
 

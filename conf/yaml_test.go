@@ -8,7 +8,7 @@ import (
 
 func TestInitYamlConfig(t *testing.T) {
 	expected := Config{
-		Keys:    map[string]string{"default": DefaultPrivateKey},
+		Keys: map[string]Key{"default": {Path: DefaultPrivateKey}},
 	}
 	actual := InitYamlConfig()
 	if !reflect.DeepEqual(actual, expected) {
@@ -37,14 +37,14 @@ func TestWriteYamlConfig(t *testing.T) {
 func TestDelYamlFile(t *testing.T) {
 	// 备份配置文件
 	if CheckFileISExist(YamlPath) {
-		cmd := exec.Command("cp", YamlPath, YamlPath + "_test_backup")
+		cmd := exec.Command("cp", YamlPath, YamlPath+"_test_backup")
 		err := cmd.Run()
 		if err != nil {
 			t.Fatal(err)
 		}
 		// 完成时，备份拷回
 		defer func() {
-			cmd := exec.Command("mv", YamlPath + "_test_backup", YamlPath)
+			cmd := exec.Command("mv", YamlPath+"_test_backup", YamlPath)
 			err := cmd.Run()
 			if err != nil {
 				t.Fatal(err)

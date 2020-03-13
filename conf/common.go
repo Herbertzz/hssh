@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/user"
@@ -38,7 +37,7 @@ func CheckFileISExist(filename string) bool {
 func PrivateKeyPath(path string) (string, error) {
 	if path2.IsAbs(path) {
 		if !CheckFileISExist(path) {
-			return "", errors.New(fmt.Sprintf("private key path(%s) not exist", path))
+			return "", fmt.Errorf("private key path(%s) not exist", path)
 		}
 		return path, nil
 	}
@@ -48,7 +47,7 @@ func PrivateKeyPath(path string) (string, error) {
 	}
 	path = path2.Join(homePath, path)
 	if !CheckFileISExist(path) {
-		return "", errors.New(fmt.Sprintf("private key path(%s) not exist", path))
+		return "", fmt.Errorf("private key path(%s) not exist", path)
 	}
 	return path, nil
 }

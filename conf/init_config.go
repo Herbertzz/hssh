@@ -18,14 +18,15 @@ var DefaultPrivateKey string
 
 // Server 配置文件中的服务器配置结构
 type Server struct {
-	User          string `yaml:"username"`
-	Host          string `yaml:"host"`
-	Port          int    `yaml:"port"`
-	AuthMethod    string `yaml:"auth_method"`
-	Password      string `yaml:"password,omitempty"`
-	PrivateKey    string `yaml:"private_key,omitempty"`
+	User       string `yaml:"username"`
+	Host       string `yaml:"host"`
+	Port       int    `yaml:"port"`
+	AuthMethod string `yaml:"auth_method"`
+	Password   string `yaml:"password,omitempty"`
+	PrivateKey string `yaml:"private_key,omitempty"`
 }
 
+// Key: 配置文件中的私钥配置结构
 type Key struct {
 	Path       string `yaml:"path"`
 	Passphrase string `yaml:"passphrase,omitempty"`
@@ -33,7 +34,7 @@ type Key struct {
 
 // Config 配置文件结构
 type Config struct {
-	Keys    map[string]Key `yaml:"keys"`
+	Keys    map[string]Key    `yaml:"keys"`
 	Servers map[string]Server `yaml:"servers,omitempty"`
 }
 
