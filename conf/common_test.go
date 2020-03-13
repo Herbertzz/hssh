@@ -1,10 +1,9 @@
-package models
+package conf
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"hssh/conf"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -80,14 +79,14 @@ func TestPrivateKeyPath(t *testing.T) {
 	}{
 		{getExecPath(), getExecPath()},
 		{"/tmp/not_exist_file_8dfk3d9", ""},
-		{conf.DefaultPrivateKey, conf.DefaultPrivateKey},
+		{DefaultPrivateKey, DefaultPrivateKey},
 		{"no_exist_file_8mdf82li9", ""},
 	}
 
 	// 默认私钥不存在时，创建虚拟的私钥
  	status := false
-	if !CheckFileISExist(conf.DefaultPrivateKey) {
-		cmd := exec.Command("mkdir", "-p", conf.DefaultPrivateKey)
+	if !CheckFileISExist(DefaultPrivateKey) {
+		cmd := exec.Command("mkdir", "-p", DefaultPrivateKey)
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		err := cmd.Run()
@@ -99,7 +98,7 @@ func TestPrivateKeyPath(t *testing.T) {
 	// 完成时，删除该虚拟私钥
 	defer func() {
 		if status {
-			cmd := exec.Command("rm", "-rf", conf.DefaultPrivateKey)
+			cmd := exec.Command("rm", "-rf", DefaultPrivateKey)
 			err := cmd.Run()
 			if err != nil {
 				t.Fatal(err)
@@ -117,7 +116,7 @@ func TestPrivateKeyPath(t *testing.T) {
 
 func TestShowKeys(t *testing.T) {
 	// 构造数据
-	config := conf.Config{
+	config := Config{
 		Keys: map[string]string{
 			"default": "/Users/herbertzz/.ssh/id_rsa",
 			"xg":      "8msdfwr5544",

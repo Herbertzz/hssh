@@ -161,7 +161,7 @@ func getPass() (string, error) {
 // OpenSSH 运行一个 ssh 会话
 func OpenSSH(c conf.Server, key string) {
 	if c.Host == "" {
-		CheckErr(errors.New("host not exist"))
+		conf.CheckErr(errors.New("host not exist"))
 	}
 
 	var (
@@ -196,7 +196,7 @@ func OpenSSH(c conf.Server, key string) {
 		}
 	} else if c.AuthMethod == "key" {
 		pemBytes, err := ioutil.ReadFile(key)
-		CheckErr(err)
+		conf.CheckErr(err)
 
 		var signer ssh.Signer
 		if c.KeyPassphrase == "" {
@@ -204,10 +204,10 @@ func OpenSSH(c conf.Server, key string) {
 		} else {
 			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
 		}
-		CheckErr(err)
+		conf.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))
 	} else {
-		CheckErr(errors.New("auth method only supports password and key"))
+		conf.CheckErr(errors.New("auth method only supports password and key"))
 	}
 
 	config = ssh.Config{
@@ -237,12 +237,12 @@ func OpenSSH(c conf.Server, key string) {
 	// 创建 client
 	addr = fmt.Sprintf("%s:%d", c.Host, port)
 	client, err = ssh.Dial("tcp", addr, sshConfig)
-	CheckErr(err)
+	conf.CheckErr(err)
 	defer client.Close()
 
 	// 获取 session
 	err = newSession(client)
-	CheckErr(err)
+	conf.CheckErr(err)
 }
 
 // 创建一个新的交互式 session
