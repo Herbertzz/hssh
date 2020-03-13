@@ -16,7 +16,7 @@ func CheckErr(err error) {
 	}
 }
 
-// homePath 返回当前用户的 home 路径
+// HomePath 返回当前用户的 home 路径
 func HomePath() (string, error) {
 	u, err := user.Current()
 	if err != nil {
