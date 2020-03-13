@@ -1,4 +1,5 @@
 # SSH 连接管理工具
+[![codecov](https://codecov.io/gh/Herbertzz/hssh/branch/master/graph/badge.svg)](https://codecov.io/gh/Herbertzz/hssh)
 # 简介
 个人需要管理的服务器比较多，自带的 ssh 只能设置别名，没法快速查询我设置了哪些别名，每次都需要打开配置文件进行查看，很是麻烦。
 故开发这个工具，提升下效率
