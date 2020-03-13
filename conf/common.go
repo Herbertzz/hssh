@@ -38,18 +38,17 @@ func CheckFileISExist(filename string) bool {
 func PrivateKeyPath(path string) (string, error) {
 	if path2.IsAbs(path) {
 		if !CheckFileISExist(path) {
-			return "", errors.New("private key does not exist")
+			return "", errors.New(fmt.Sprintf("private key path(%s) not exist", path))
 		}
 		return path, nil
 	}
-	fmt.Printf("The current path is not an absolute path, will use {home path}/%s\n\n", path)
 	homePath, err := HomePath()
 	if err != nil {
 		return "", err
 	}
 	path = path2.Join(homePath, path)
 	if !CheckFileISExist(path) {
-		return "", errors.New("private key does not exist")
+		return "", errors.New(fmt.Sprintf("private key path(%s) not exist", path))
 	}
 	return path, nil
 }
@@ -58,7 +57,7 @@ func PrivateKeyPath(path string) (string, error) {
 func ShowKeys(configs Config) {
 	index := 1
 	for k, v := range configs.Keys {
-		fmt.Printf("%02d. %s: %s\n", index, k, v)
+		fmt.Printf("%02d. %s: %s\n", index, k, v.Path)
 		index++
 	}
 }

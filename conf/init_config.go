@@ -3,12 +3,16 @@ package conf
 import (
 	path2 "path"
 )
+
 // PROJECTNAME 项目名
 const PROJECTNAME = "hssh"
+
 // VERSION 版本号
-const VERSION  = "0.4.18-beta"
+const VERSION = "0.5.18-beta"
+
 // YamlPath 配置文件路径
 var YamlPath string
+
 // DefaultPrivateKey 默认的私钥路径
 var DefaultPrivateKey string
 
@@ -20,12 +24,16 @@ type Server struct {
 	AuthMethod    string `yaml:"auth_method"`
 	Password      string `yaml:"password,omitempty"`
 	PrivateKey    string `yaml:"private_key,omitempty"`
-	KeyPassphrase string `yaml:"key_passphrase,omitempty"`
+}
+
+type Key struct {
+	Path       string `yaml:"path"`
+	Passphrase string `yaml:"passphrase,omitempty"`
 }
 
 // Config 配置文件结构
 type Config struct {
-	Keys    map[string]string `yaml:"keys"`
+	Keys    map[string]Key `yaml:"keys"`
 	Servers map[string]Server `yaml:"servers,omitempty"`
 }
 

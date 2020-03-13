@@ -159,11 +159,7 @@ func getPass() (string, error) {
 }
 
 // OpenSSH 运行一个 ssh 会话
-func OpenSSH(c conf.Server, key string) {
-	if c.Host == "" {
-		conf.CheckErr(errors.New("host not exist"))
-	}
-
+func OpenSSH(c conf.Server, key conf.Key) {
 	var (
 		user      string
 		port      int
@@ -174,6 +170,10 @@ func OpenSSH(c conf.Server, key string) {
 		client    *ssh.Client
 		err       error
 	)
+
+	if c.Host == "" {
+		conf.CheckErr(errors.New("host not exist"))
+	}
 
 	if c.User == "" {
 		user = "root"
@@ -195,14 +195,14 @@ func OpenSSH(c conf.Server, key string) {
 			auth = append(auth, ssh.Password(c.Password))
 		}
 	} else if c.AuthMethod == "key" {
-		pemBytes, err := ioutil.ReadFile(key)
+		pemBytes, err := ioutil.ReadFile(key.Path)
 		conf.CheckErr(err)
 
 		var signer ssh.Signer
-		if c.KeyPassphrase == "" {
+		if key.Passphrase == "" {
 			signer, err = ssh.ParsePrivateKey(pemBytes)
 		} else {
-			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(c.KeyPassphrase))
+			signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(key.Passphrase))
 		}
 		conf.CheckErr(err)
 		auth = append(auth, ssh.PublicKeys(signer))

@@ -20,8 +20,9 @@ func init() {
 
 // InitYamlConfig 初始化配置文件
 func InitYamlConfig() Config {
-	configs := Config{
-		Keys: map[string]string{"default": DefaultPrivateKey},
+	configs := Config{}
+	if CheckFileISExist(DefaultPrivateKey) {
+		configs.Keys = map[string]Key{"default": {Path: DefaultPrivateKey}}
 	}
 	return configs
 }

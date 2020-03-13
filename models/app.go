@@ -17,12 +17,12 @@ func StartAPP() {
 		Version: conf.VERSION,
 		Action:  actionOfOpenSSH,
 		Commands: []*cli.Command{
-			 commandOfAdd(),
-			 commandOfRm(),
-			 commandOfLs(),
-			 commandOfEdit(),
-			 commandOfUninstall(),
-			 commandOfKeys(),
+			commandOfAdd(),
+			commandOfRm(),
+			commandOfLs(),
+			commandOfEdit(),
+			commandOfUninstall(),
+			commandOfKeys(),
 		},
 	}
 
@@ -47,12 +47,12 @@ func actionOfOpenSSH(c *cli.Context) error {
 			return nil
 		}
 
-		key := ""
+		key := conf.Key{}
 		if session.AuthMethod == "key" {
 			key, ok = configs.Keys[session.PrivateKey]
 			if !ok {
 				fmt.Printf("%s not exist in keys\n", session.PrivateKey)
-				os.Exit(0)
+				return nil
 			}
 		}
 
@@ -91,7 +91,6 @@ func commandOfAdd() *cli.Command {
 				Name:        "auth",
 				Usage:       "auth `method`: password or key",
 				DefaultText: "password",
-				Value:       "password",
 			},
 			&cli.StringFlag{
 				Name:    "password",
@@ -102,6 +101,11 @@ func commandOfAdd() *cli.Command {
 				Name:    "private-key",
 				Aliases: []string{"key"},
 				Usage:   "The value of the Keys list",
+			},
+			&cli.StringFlag{
+				Name:    "private-key-path",
+				Aliases: []string{"key-path"},
+				Usage:   "private key path",
 			},
 			&cli.StringFlag{
 				Name:    "key-passphrase",
@@ -149,9 +153,29 @@ func actionOfAdd(c *cli.Context) error {
 	}
 	// 认证方式
 	authMethod := c.String("auth")
-	if authMethod == "password" {
+	if authMethod == "" {
+		authMethod = "password"
 		session.Password = c.String("password")
 	} else if authMethod == "key" {
+		// 检查是否存在默认密钥或者 --key-path 参数
+		if len(configs.Keys) == 0 && c.String("private-key-path") == "" {
+			fmt.Println("There is no default private key.")
+			fmt.Println("add `--key-path {private_key_path} [--key-pass {password}]` argument is saved as the default private key")
+			fmt.Printf("Or execute `%s keys add` command to add a private key.\n", conf.PROJECTNAME)
+			return nil
+		}
+		if len(configs.Keys) == 0 && c.String("private-key-path") != "" {
+			configs.Keys = map[string]conf.Key{}
+			path, err := conf.PrivateKeyPath(c.String("private-key-path"))
+			conf.CheckErr(err)
+			key := conf.Key{Path: path}
+			// 密钥密码
+			if c.String("key-passphrase") != "" {
+				key.Passphrase = c.String("key-passphrase")
+			}
+			configs.Keys["default"] = key
+		}
+
 		if c.String("private-key") == "" {
 			session.PrivateKey = "default"
 		} else {
@@ -162,10 +186,6 @@ func actionOfAdd(c *cli.Context) error {
 				return nil
 			}
 			session.PrivateKey = key
-		}
-		// 密钥密码
-		if c.String("key-passphrase") != "" {
-			session.KeyPassphrase = c.String("key-passphrase")
 		}
 	} else {
 		fmt.Println("'--auth' only supports password and key")
@@ -302,11 +322,6 @@ func commandOfEdit() *cli.Command {
 				Aliases: []string{"key"},
 				Usage:   "The value of the Keys list",
 			},
-			&cli.StringFlag{
-				Name:    "key-passphrase",
-				Aliases: []string{"key-pass"},
-				Usage:   "private key password",
-			},
 		},
 		Action: actionOfEdit,
 	}
@@ -345,22 +360,16 @@ func actionOfEdit(c *cli.Context) error {
 		session.AuthMethod = authMethod
 		// 清除key认证的值
 		session.PrivateKey = ""
-		session.KeyPassphrase = ""
 	} else if authMethod == "key" {
-		if c.String("private-key") == "" {
-			session.PrivateKey = "default"
-		} else {
+		if c.String("private-key") != "" {
 			key := c.String("private-key")
 			_, ok = configs.Keys[key]
 			if !ok {
 				fmt.Printf("%s does not exist in keys\n", key)
+				fmt.Printf("execute `%s keys add` command to add a private key.\n", conf.PROJECTNAME)
 				return nil
 			}
 			session.PrivateKey = key
-		}
-		// 密钥密码
-		if c.String("key-passphrase") != "" {
-			session.KeyPassphrase = c.String("key-passphrase")
 		}
 		session.AuthMethod = authMethod
 		session.Password = ""
@@ -444,8 +453,11 @@ func keysSubcommandsOfAdd() *cli.Command {
 		Name:  "add",
 		Usage: "add a key to the keys",
 		Action: func(c *cli.Context) error {
+			keyConfig := conf.Key{}
 			key := c.Args().Get(0)
 			value := c.Args().Get(1)
+			passphrase := c.Args().Get(2)
+
 			if key == "" {
 				fmt.Printf("key is empty\n")
 				os.Exit(0)
@@ -454,7 +466,7 @@ func keysSubcommandsOfAdd() *cli.Command {
 				fmt.Printf("private key path is empty\n")
 				os.Exit(0)
 			}
-
+			// 读取配置文件
 			configs, err := conf.ReadYamlConfig()
 			conf.CheckErr(err)
 
@@ -464,9 +476,15 @@ func keysSubcommandsOfAdd() *cli.Command {
 				fmt.Printf("Modify the key if necessary, Please execute: %s keys edit %s %s\n", conf.PROJECTNAME, key, value)
 				os.Exit(0)
 			}
+
 			path, err := conf.PrivateKeyPath(value)
 			conf.CheckErr(err)
-			configs.Keys[key] = path
+			keyConfig.Path = path
+			// 密钥密码
+			if passphrase != "" {
+				keyConfig.Passphrase = passphrase
+			}
+			configs.Keys[key] = keyConfig
 			err = conf.WriteYamlConfig(configs)
 			conf.CheckErr(err)
 			// 显示keys列表
@@ -509,8 +527,11 @@ func keysSubcommandsOfEdit() *cli.Command {
 		Name:  "edit",
 		Usage: "modify a key to the keys",
 		Action: func(c *cli.Context) error {
+			keyConfig := conf.Key{}
 			key := c.Args().Get(0)
 			value := c.Args().Get(1)
+			passphrase := c.Args().Get(2)
+
 			if key == "" {
 				fmt.Printf("key is empty\n")
 				os.Exit(0)
@@ -531,7 +552,12 @@ func keysSubcommandsOfEdit() *cli.Command {
 
 			path, err := conf.PrivateKeyPath(value)
 			conf.CheckErr(err)
-			configs.Keys[key] = path
+			keyConfig.Path = path
+			// 密钥密码
+			if passphrase != "" {
+				keyConfig.Passphrase = passphrase
+			}
+			configs.Keys[key] = keyConfig
 			err = conf.WriteYamlConfig(configs)
 			conf.CheckErr(err)
 			// 显示keys列表
