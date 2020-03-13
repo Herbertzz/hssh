@@ -26,7 +26,7 @@ type Server struct {
 	PrivateKey string `yaml:"private_key,omitempty"`
 }
 
-// Key: 配置文件中的私钥配置结构
+// Key 配置文件中的私钥配置结构
 type Key struct {
 	Path       string `yaml:"path"`
 	Passphrase string `yaml:"passphrase,omitempty"`

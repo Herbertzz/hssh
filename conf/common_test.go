@@ -1,9 +1,7 @@
 package conf
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -84,27 +82,19 @@ func TestPrivateKeyPath(t *testing.T) {
 	}
 
 	// 默认私钥不存在时，创建虚拟的私钥
-	status := false
 	if !CheckFileISExist(DefaultPrivateKey) {
-		cmd := exec.Command("mkdir", "-p", DefaultPrivateKey)
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		err := cmd.Run()
+		err := createTestDir(DefaultPrivateKey)
 		if err != nil {
-			t.Fatal(fmt.Sprint(err) + ": " + stderr.String())
+			t.Fatal(err)
 		}
-		status = true
-	}
-	// 完成时，删除该虚拟私钥
-	defer func() {
-		if status {
-			cmd := exec.Command("rm", "-rf", DefaultPrivateKey)
-			err := cmd.Run()
+		// 完成时删除虚拟私钥
+		defer func() {
+			err := destroyTestDir(DefaultPrivateKey)
 			if err != nil {
 				t.Fatal(err)
 			}
-		}
-	}()
+		}()
+	}
 
 	for _, tt := range tests {
 		actual, err := PrivateKeyPath(tt.in)
