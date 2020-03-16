@@ -113,91 +113,88 @@ func commandOfAdd() *cli.Command {
 				Usage:   "private key password",
 			},
 		},
-		Action: actionOfAdd,
-	}
-}
-
-// 动作: add
-func actionOfAdd(c *cli.Context) error {
-	arg := c.Args().First()
-	// 检查alias是否存在
-	if arg == "" {
-		fmt.Println("alias is not set")
-		return nil
-	}
-	// 读取配置文件
-	configs, err := conf.ReadYamlConfig()
-	conf.CheckErr(err)
-	sessions := configs.Servers
-	if len(sessions) == 0 {
-		sessions = make(map[string]conf.Server)
-	}
-	_, ok := sessions[arg]
-	if ok {
-		fmt.Printf("%s is already in the list\n", arg)
-		return nil
-	}
-	// 生成服务器配置
-	session := conf.Server{
-		Host: c.String("host"),
-	}
-	if c.String("username") != "" {
-		session.User = c.String("username")
-	} else {
-		session.User = "root"
-	}
-	if c.Int("port") != 0 {
-		session.Port = c.Int("port")
-	} else {
-		session.Port = 22
-	}
-	// 认证方式
-	authMethod := c.String("auth")
-	if authMethod == "" {
-		authMethod = "password"
-		session.Password = c.String("password")
-	} else if authMethod == "key" {
-		// 检查是否存在默认密钥或者 --key-path 参数
-		if len(configs.Keys) == 0 && c.String("private-key-path") == "" {
-			fmt.Println("There is no default private key.")
-			fmt.Println("add `--key-path {private_key_path} [--key-pass {password}]` argument is saved as the default private key")
-			fmt.Printf("Or execute `%s keys add` command to add a private key.\n", conf.PROJECTNAME)
-			return nil
-		}
-		if len(configs.Keys) == 0 && c.String("private-key-path") != "" {
-			configs.Keys = map[string]conf.Key{}
-			path, err := conf.PrivateKeyPath(c.String("private-key-path"))
-			conf.CheckErr(err)
-			key := conf.Key{Path: path}
-			// 密钥密码
-			if c.String("key-passphrase") != "" {
-				key.Passphrase = c.String("key-passphrase")
-			}
-			configs.Keys["default"] = key
-		}
-
-		if c.String("private-key") == "" {
-			session.PrivateKey = "default"
-		} else {
-			key := c.String("private-key")
-			_, ok = configs.Keys[key]
-			if !ok {
-				fmt.Printf("%s does not exist in keys\n", key)
+		Action: func(c *cli.Context) error {
+			arg := c.Args().First()
+			// 检查alias是否存在
+			if arg == "" {
+				fmt.Println("alias is not set")
 				return nil
 			}
-			session.PrivateKey = key
-		}
-	} else {
-		fmt.Println("'--auth' only supports password and key")
-		return nil
-	}
-	session.AuthMethod = authMethod
+			// 读取配置文件
+			configs, err := conf.ReadYamlConfig()
+			conf.CheckErr(err)
+			sessions := configs.Servers
+			if len(sessions) == 0 {
+				sessions = make(map[string]conf.Server)
+			}
+			_, ok := sessions[arg]
+			if ok {
+				fmt.Printf("%s is already in the list\n", arg)
+				return nil
+			}
+			// 生成服务器配置
+			session := conf.Server{
+				Host: c.String("host"),
+			}
+			if c.String("username") != "" {
+				session.User = c.String("username")
+			} else {
+				session.User = "root"
+			}
+			if c.Int("port") != 0 {
+				session.Port = c.Int("port")
+			} else {
+				session.Port = 22
+			}
+			// 认证方式
+			authMethod := c.String("auth")
+			if authMethod == "" {
+				authMethod = "password"
+				session.Password = c.String("password")
+			} else if authMethod == "key" {
+				// 检查是否存在默认密钥或者 --key-path 参数
+				if len(configs.Keys) == 0 && c.String("private-key-path") == "" {
+					fmt.Println("There is no default private key.")
+					fmt.Println("add `--key-path {private_key_path} [--key-pass {password}]` argument is saved as the default private key")
+					fmt.Printf("Or execute `%s keys add` command to add a private key.\n", conf.PROJECTNAME)
+					return nil
+				}
+				if len(configs.Keys) == 0 && c.String("private-key-path") != "" {
+					configs.Keys = map[string]conf.Key{}
+					path, err := conf.PrivateKeyPath(c.String("private-key-path"))
+					conf.CheckErr(err)
+					key := conf.Key{Path: path}
+					// 密钥密码
+					if c.String("key-passphrase") != "" {
+						key.Passphrase = c.String("key-passphrase")
+					}
+					configs.Keys["default"] = key
+				}
 
-	sessions[arg] = session
-	configs.Servers = sessions
-	err = conf.WriteYamlConfig(configs)
-	conf.CheckErr(err)
-	return nil
+				if c.String("private-key") == "" {
+					session.PrivateKey = "default"
+				} else {
+					key := c.String("private-key")
+					_, ok = configs.Keys[key]
+					if !ok {
+						fmt.Printf("%s does not exist in keys\n", key)
+						return nil
+					}
+					session.PrivateKey = key
+				}
+			} else {
+				fmt.Println("'--auth' only supports password and key")
+				return nil
+			}
+			session.AuthMethod = authMethod
+
+			sessions[arg] = session
+			configs.Servers = sessions
+			err = conf.WriteYamlConfig(configs)
+			conf.CheckErr(err)
+			return nil
+		},
+	}
 }
 
 // rm 命令
@@ -237,7 +234,7 @@ func commandOfRm() *cli.Command {
 				}
 				keys := configs.SortServerKeys()
 				for i, k := range keys {
-					if i == index - 1 {
+					if i == index-1 {
 						delete(configs.Servers, k)
 					}
 				}
@@ -272,26 +269,23 @@ func commandOfRm() *cli.Command {
 // ls 命令
 func commandOfLs() *cli.Command {
 	return &cli.Command{
-		Name:   "ls",
-		Usage:  "show session list",
-		Action: actionOfLs,
+		Name:  "ls",
+		Usage: "show session list",
+		Action: func(c *cli.Context) error {
+			// 读取配置
+			configs, err := conf.ReadYamlConfig()
+			conf.CheckErr(err)
+			// 检查是否存在服务器配置
+			sessions := configs.Servers
+			if len(sessions) == 0 {
+				fmt.Printf("list is empty, please execute command `%s add` first\n", conf.PROJECTNAME)
+				return nil
+			}
+			// 打印服务器列表
+			conf.ShowServers(configs)
+			return nil
+		},
 	}
-}
-
-// 动作: ls
-func actionOfLs(c *cli.Context) error {
-	// 读取配置
-	configs, err := conf.ReadYamlConfig()
-	conf.CheckErr(err)
-	// 检查是否存在服务器配置
-	sessions := configs.Servers
-	if len(sessions) == 0 {
-		fmt.Printf("list is empty, please execute command `%s add` first\n", conf.PROJECTNAME)
-		return nil
-	}
-	// 打印服务器列表
-	conf.ShowServers(configs)
-	return nil
 }
 
 // edit 命令
@@ -333,63 +327,60 @@ func commandOfEdit() *cli.Command {
 				Usage:   "The value of the Keys list",
 			},
 		},
-		Action: actionOfEdit,
-	}
-}
-
-// 动作: edit
-func actionOfEdit(c *cli.Context) error {
-	arg := c.Args().First()
-	if arg == "" {
-		fmt.Println("alias is not set")
-		return nil
-	}
-	// 读取配置
-	configs, _ := conf.ReadYamlConfig()
-	sessions := configs.Servers
-	_, ok := sessions[arg]
-	if !ok {
-		fmt.Printf("%s is not exist in the list\n", arg)
-		os.Exit(0)
-	}
-	// 生成服务器配置
-	session := sessions[arg]
-	if c.String("host") != "" {
-		session.Host = c.String("host")
-	}
-	if c.String("username") != "" {
-		session.User = c.String("username")
-	}
-	if c.Int("port") != 0 {
-		session.Port = c.Int("port")
-	}
-	// 认证方式
-	authMethod := c.String("auth")
-	if authMethod == "password" {
-		session.Password = c.String("password")
-		session.AuthMethod = authMethod
-		// 清除key认证的值
-		session.PrivateKey = ""
-	} else if authMethod == "key" {
-		if c.String("private-key") != "" {
-			key := c.String("private-key")
-			_, ok = configs.Keys[key]
-			if !ok {
-				fmt.Printf("%s does not exist in keys\n", key)
-				fmt.Printf("execute `%s keys add` command to add a private key.\n", conf.PROJECTNAME)
+		Action: func(c *cli.Context) error {
+			arg := c.Args().First()
+			if arg == "" {
+				fmt.Println("alias is not set")
 				return nil
 			}
-			session.PrivateKey = key
-		}
-		session.AuthMethod = authMethod
-		session.Password = ""
+			// 读取配置
+			configs, _ := conf.ReadYamlConfig()
+			sessions := configs.Servers
+			_, ok := sessions[arg]
+			if !ok {
+				fmt.Printf("%s is not exist in the list\n", arg)
+				os.Exit(0)
+			}
+			// 生成服务器配置
+			session := sessions[arg]
+			if c.String("host") != "" {
+				session.Host = c.String("host")
+			}
+			if c.String("username") != "" {
+				session.User = c.String("username")
+			}
+			if c.Int("port") != 0 {
+				session.Port = c.Int("port")
+			}
+			// 认证方式
+			authMethod := c.String("auth")
+			if authMethod == "password" {
+				session.Password = c.String("password")
+				session.AuthMethod = authMethod
+				// 清除key认证的值
+				session.PrivateKey = ""
+			} else if authMethod == "key" {
+				if c.String("private-key") != "" {
+					key := c.String("private-key")
+					_, ok = configs.Keys[key]
+					if !ok {
+						fmt.Printf("%s does not exist in keys\n", key)
+						fmt.Printf("execute `%s keys add` command to add a private key.\n", conf.PROJECTNAME)
+						return nil
+					}
+					session.PrivateKey = key
+				}
+				session.AuthMethod = authMethod
+				session.Password = ""
+			}
+			// 更新配置文件
+			sessions[arg] = session
+			configs.Servers = sessions
+			err := conf.WriteYamlConfig(configs)
+			conf.CheckErr(err)
+			return nil
+		},
 	}
-	// 更新配置文件
-	sessions[arg] = session
-	configs.Servers = sessions
-	err := conf.WriteYamlConfig(configs)
-	conf.CheckErr(err)
-	return nil
 }
 
 // uninstall 命令
@@ -403,25 +394,22 @@ func commandOfUninstall() *cli.Command {
 				Usage: "Delete with the configuration file",
 			},
 		},
-		Action: actionOfUninstall,
+		Action: func(c *cli.Context) error {
+			if c.Bool("all") {
+				// 删除配置文件
+				err := conf.DelYamlFile()
+				conf.CheckErr(err)
+			}
+			// 获取当前执行程序的绝对路径并删除该程序
+			file, err := exec.LookPath(os.Args[0])
+			conf.CheckErr(err)
+			path, err := filepath.Abs(file)
+			conf.CheckErr(err)
+			err = os.Remove(path)
+			conf.CheckErr(err)
+			return nil
+		},
 	}
-}
-
-// 动作: uninstall
-func actionOfUninstall(c *cli.Context) error {
-	if c.Bool("all") {
-		// 删除配置文件
-		err := conf.DelYamlFile()
-		conf.CheckErr(err)
-	}
-	// 获取当前执行程序的绝对路径并删除该程序
-	file, err := exec.LookPath(os.Args[0])
-	conf.CheckErr(err)
-	path, err := filepath.Abs(file)
-	conf.CheckErr(err)
-	err = os.Remove(path)
-	conf.CheckErr(err)
-	return nil
 }
 
 // keys 管理
