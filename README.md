@@ -29,9 +29,11 @@ $ hssh add -i host [-u nameuser] [-p port] [--auth method] [-pass password] [--k
 $ hssh ls
 
 # 删除指定的 alias 的服务器信息
-$ hssh rm [alias]
+$ hssh rm alias
 # 删除配置文件
 # hssh rm --all
+# 删除指定 number 的服务器信息
+# hssh rm -i number
 
 # 修改指定 alias 的服务器信息
 $ hssh edit [-i host] [-u nameuser] [-p port] [--auth method] [-pass password] [--key private-key] alias
@@ -73,4 +75,3 @@ servers:
 
 ## 待开发
 * `hssh ls` 支持模糊匹配功能
-* `hssh rm {index}` 支持使用序号删除

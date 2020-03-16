@@ -2,13 +2,14 @@ package conf
 
 import (
 	path2 "path"
+	"sort"
 )
 
 // PROJECTNAME 项目名
 const PROJECTNAME = "hssh"
 
 // VERSION 版本号
-const VERSION = "0.5.18-beta"
+const VERSION = "0.6.18-beta"
 
 // YamlPath 配置文件路径
 var YamlPath string
@@ -36,6 +37,30 @@ type Key struct {
 type Config struct {
 	Keys    map[string]Key    `yaml:"keys"`
 	Servers map[string]Server `yaml:"servers,omitempty"`
+}
+
+// SortServerKeys 对服务器列表进行排序
+func (config Config) SortServerKeys() []string {
+	keys := make([]string, len(config.Servers))
+	i := 0
+	for k := range config.Servers {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// SortPrivateKeys 对私钥列表进行排序
+func (config Config) SortPrivateKeys() []string {
+	keys := make([]string, len(config.Keys))
+	i := 0
+	for k := range config.Keys {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func init() {

@@ -54,9 +54,28 @@ func PrivateKeyPath(path string) (string, error) {
 
 // ShowKeys 显示keys列表
 func ShowKeys(configs Config) {
-	index := 1
-	for k, v := range configs.Keys {
-		fmt.Printf("%02d. %s: %s\n", index, k, v.Path)
-		index++
+	keys := configs.SortPrivateKeys()
+	var key Key
+	for i, k := range keys {
+		key = configs.Keys[k]
+		fmt.Printf("%02d. %s: %s\n", i + 1, k, key.Path)
+	}
+}
+
+// ShowServers 打印服务器列表
+func ShowServers(config Config) {
+	sessions := config.SortServerKeys()
+	var authMethod string
+	var session Server
+	for i, k := range sessions {
+		session = config.Servers[k]
+		if session.AuthMethod == "password" {
+			authMethod = "Password: " + session.Password
+		} else if session.AuthMethod == "key" {
+			authMethod = "Key: " + session.PrivateKey
+		} else {
+			authMethod = "undefined"
+		}
+		fmt.Printf("%02d. %s: %s@%s:%d(%s)\n", i + 1, k, session.User, session.Host, session.Port, authMethod)
 	}
 }

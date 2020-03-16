@@ -210,41 +210,63 @@ func commandOfRm() *cli.Command {
 				Name:  "all",
 				Usage: "delete all session",
 			},
+			&cli.IntFlag{
+				Name:    "index",
+				Aliases: []string{"i"},
+				Usage:   "Use the sequence `number` to specify the delete item",
+			},
 		},
-		Action: actionOfRm,
-	}
-}
+		Action: func(c *cli.Context) error {
+			// 读取配置
+			configs, err := conf.ReadYamlConfig()
+			conf.CheckErr(err)
+			// 清空服务器列表
+			if c.Bool("all") {
+				configs.Servers = make(map[string]conf.Server, 0)
+				err := conf.WriteYamlConfig(configs)
+				conf.CheckErr(err)
+				return nil
+			}
 
-// 动作: rm
-func actionOfRm(c *cli.Context) error {
-	// 读取配置
-	configs, err := conf.ReadYamlConfig()
-	conf.CheckErr(err)
-	// 清空服务器列表
-	if c.Bool("all") {
-		configs.Servers = make(map[string]conf.Server, 0)
-		err := conf.WriteYamlConfig(configs)
-		conf.CheckErr(err)
-		return nil
-	}
-	// 检查alias参数是否存在
-	arg := c.Args().First()
-	if arg == "" {
-		fmt.Println("alias argument not set")
-		return nil
-	}
-	// 检查指定alias的服务器是否存在
-	_, ok := configs.Servers[arg]
-	if !ok {
-		fmt.Printf("%s not found\n", arg)
-		return nil
-	}
-	delete(configs.Servers, arg)
+			if c.Int("index") != 0 {
+				// 序号删除模式
+				index := c.Int("index")
+				if index > len(configs.Servers) || index < 0 {
+					fmt.Println("number invalid")
+					return nil
+				}
+				keys := configs.SortServerKeys()
+				for i, k := range keys {
+					if i == index - 1 {
+						delete(configs.Servers, k)
+					}
+				}
+			} else {
+				// key删除模式
+				arg := c.Args().First()
+				// 检查alias参数是否存在
+				if arg == "" {
+					fmt.Println("alias argument not set")
+					return nil
+				}
+				// 检查指定alias的服务器是否存在
+				_, ok := configs.Servers[arg]
+				if !ok {
+					fmt.Printf("%s not found\n", arg)
+					return nil
+				}
+				delete(configs.Servers, arg)
+			}
 
-	err = conf.WriteYamlConfig(configs)
-	conf.CheckErr(err)
-	fmt.Println("success")
-	return nil
+			err = conf.WriteYamlConfig(configs)
+			conf.CheckErr(err)
+			fmt.Println("success")
+			fmt.Println("-------")
+			// 打印服务器列表
+			conf.ShowServers(configs)
+			return nil
+		},
+	}
 }
 
 // ls 命令
@@ -268,19 +290,7 @@ func actionOfLs(c *cli.Context) error {
 		return nil
 	}
 	// 打印服务器列表
-	var authMethod string
-	index := 1
-	for k, v := range sessions {
-		if v.AuthMethod == "password" {
-			authMethod = "Password: " + v.Password
-		} else if v.AuthMethod == "key" {
-			authMethod = "Key: " + v.PrivateKey
-		} else {
-			authMethod = "undefined"
-		}
-		fmt.Printf("%02d. %s: %s@%s:%d(%s)\n", index, k, v.User, v.Host, v.Port, authMethod)
-		index++
-	}
+	conf.ShowServers(configs)
 	return nil
 }
 
